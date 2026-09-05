@@ -9,17 +9,20 @@ import { CompileRequestError } from "./types.js";
 const semaphore = new Semaphore(config.maxConcurrentCompiles);
 
 /** Validates the request, picks the right toolchain for the target, and runs the compile under the concurrency limit. */
-export async function runCompile(source: string, targetId: string): Promise<CompileResponse> {
+export async function runCompile(source: string, targetId: string, compilerId?: string): Promise<CompileResponse> {
   validateSource(source);
 
   const toolchain = findToolchainForTarget(targetId);
   if (!toolchain) {
     throw new CompileRequestError(`Unknown target "${targetId}".`);
   }
+  if (compilerId && !toolchain.compilers?.some((c) => c.id === compilerId)) {
+    throw new CompileRequestError(`Unknown compiler "${compilerId}" for this target.`);
+  }
 
   const release = await semaphore.acquire();
   try {
-    return await toolchain.compile(source, targetId);
+    return await toolchain.compile(source, targetId, compilerId);
   } finally {
     release();
   }

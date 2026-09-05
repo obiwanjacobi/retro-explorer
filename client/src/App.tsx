@@ -20,6 +20,7 @@ function App() {
   const [toolchainId, setToolchainId] = useState("z88dk");
   const [targets, setTargets] = useState<CompileTarget[]>([]);
   const [targetId, setTargetId] = useState("zx");
+  const [compilerId, setCompilerId] = useState<string | undefined>(undefined);
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [instructions, setInstructions] = useState<AsmInstruction[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
@@ -45,19 +46,26 @@ function App() {
   }, []);
 
   const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId);
+  const currentToolchain = toolchains.find((tc) => tc.id === toolchainId);
+  const compilers = currentToolchain?.compilers ?? [];
 
   useEffect(() => {
     if (targetsForToolchain.length > 0 && !targetsForToolchain.some((t) => t.id === targetId)) {
       setTargetId(targetsForToolchain[0].id);
     }
+    if (compilers.length > 0 && !compilers.some((c) => c.id === compilerId)) {
+      setCompilerId(compilers[0].id);
+    } else if (compilers.length === 0) {
+      setCompilerId(undefined);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolchainId, targets]);
+  }, [toolchainId, targets, toolchains]);
 
-  const runCompile = async (src: string, target: string) => {
+  const runCompile = async (src: string, target: string, compiler: string | undefined) => {
     setIsCompiling(true);
     setCompileError(null);
     try {
-      const result = await compile(src, target);
+      const result = await compile(src, target, compiler);
       setInstructions(result.instructions);
       setDiagnostics(result.diagnostics);
     } catch (err) {
@@ -72,13 +80,13 @@ function App() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      runCompile(source, targetId);
+      runCompile(source, targetId, compilerId);
     }, 700);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, targetId]);
+  }, [source, targetId, compilerId]);
 
   return (
     <div className="app">
@@ -98,7 +106,16 @@ function App() {
             </option>
           ))}
         </select>
-        <button onClick={() => runCompile(source, targetId)} disabled={isCompiling}>
+        {compilers.length > 0 ? (
+          <select value={compilerId} onChange={(e) => setCompilerId(e.target.value)}>
+            {compilers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        <button onClick={() => runCompile(source, targetId, compilerId)} disabled={isCompiling}>
           {isCompiling ? "Compiling…" : "Compile"}
         </button>
         {compileError ? <span className="server-error">{compileError}</span> : null}

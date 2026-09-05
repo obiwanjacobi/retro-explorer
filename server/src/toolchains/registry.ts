@@ -1,4 +1,4 @@
-import type { CompileTarget, Toolchain } from "./types.js";
+import type { CompilerOption, CompileTarget, Toolchain } from "./types.js";
 import { z88dkToolchain } from "./z88dk/index.js";
 
 /**
@@ -20,8 +20,8 @@ export function listTargets(): CompileTarget[] {
   return toolchains.flatMap((t) => t.targets);
 }
 
-export function listToolchains(): Array<{ id: string; label: string }> {
-  return toolchains.map(({ id, label }) => ({ id, label }));
+export function listToolchains(): Array<{ id: string; label: string; compilers: CompilerOption[] }> {
+  return toolchains.map(({ id, label, compilers }) => ({ id, label, compilers: compilers ?? [] }));
 }
 
 export function findToolchainForTarget(targetId: string): Toolchain | undefined {

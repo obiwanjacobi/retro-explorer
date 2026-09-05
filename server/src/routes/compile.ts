@@ -7,6 +7,7 @@ import { CompileRequestError } from "../toolchains/types.js";
 const compileBodySchema = z.object({
   source: z.string().max(200_000),
   targetId: z.string().max(64),
+  compilerId: z.string().max(64).optional(),
 });
 
 export const router = Router();
@@ -27,7 +28,7 @@ router.post("/compile", async (req, res) => {
   }
 
   try {
-    const result = await runCompile(parsed.data.source, parsed.data.targetId);
+    const result = await runCompile(parsed.data.source, parsed.data.targetId, parsed.data.compilerId);
     res.json(result);
   } catch (err) {
     if (err instanceof CompileRequestError) {

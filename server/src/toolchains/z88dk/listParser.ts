@@ -5,6 +5,8 @@ const INSTRUCTION_ROW = /^\s*\d+\s+([0-9a-fA-F]{4})\s+([0-9a-fA-F]+)\s+(.*)$/;
 const NUMBERED_ROW = /^\s*\d+\s+(.*)$/;
 const FILE_TRANSITION = /^(\S.*):\s*$/;
 const SYMBOL_ROW = /^(\S+)\s*=\s*\$([0-9a-fA-F]+)\s*;/;
+// SDCC prefixes its source echo comments with "file:line:", e.g. ";test.c:1: int add(...)" - sccz80 just echoes the raw line.
+const SDCC_SOURCE_ECHO = /^([^\s:]+):(\d+):\s?(.*)$/;
 
 /**
  * Parses `<file>.c.sym` or `.map` output, mapping symbol name -> address.
@@ -137,11 +139,17 @@ export function parseCLis(
     // and an optional leading line number.
     const stripped = rawLine.replace(/^\s*\d*\s*/, "");
     if (stripped.startsWith(";")) {
-      const echoed = stripped.slice(1).trim();
-      const candidate = nonBlank[sourcePointer];
-      if (candidate && echoed === candidate.text.trim()) {
-        currentSourceLine = candidate.line;
-        sourcePointer++;
+      const content = stripped.slice(1);
+      const sdccEcho = SDCC_SOURCE_ECHO.exec(content);
+      if (sdccEcho && sdccEcho[1] === sourceFileName) {
+        currentSourceLine = Number(sdccEcho[2]);
+      } else {
+        const echoed = content.trim();
+        const candidate = nonBlank[sourcePointer];
+        if (candidate && echoed === candidate.text.trim()) {
+          currentSourceLine = candidate.line;
+          sourcePointer++;
+        }
       }
     }
   }

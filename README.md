@@ -1,10 +1,10 @@
 # z88dk Explorer
 
 A Compiler Explorer / SharpLab style tool for the [z88dk](https://github.com/z88dk/z88dk) Z80 C compiler.
-Write C code, compile it against a real z88dk target, and see the generated Z80
-assembly with linked addresses, instruction bytes, mnemonics, and T-state cycle
-counts — with click-to-highlight mapping between C source lines and their
-generated instructions.
+Write C code, compile it against a real z88dk target using either of z88dk's bundled front-end
+compilers (SCCZ80 or SDCC), and see the generated Z80 assembly with linked addresses, instruction
+bytes, mnemonics, and T-state cycle counts — with click-to-highlight mapping between C source
+lines and their generated instructions.
 
 ## Project layout
 
@@ -43,15 +43,23 @@ targets are dispatched to their owning toolchain automatically by id.
 
 ## How it works
 
-1. The client posts C source + a target id to `POST /api/compile`.
+1. The client posts C source + a target id + a compiler id ("sccz80" or "sdcc") to `POST /api/compile`.
 2. The server writes the source to an isolated temp directory and runs:
-   `zcc +<target> --list --c-code-in-asm -m -s -no-cleanup -o main main.c`
+   `zcc +<target> -compiler=<sccz80|sdcc> --list --c-code-in-asm -m -s -no-cleanup -o main main.c`
 3. It parses the resulting `main.c.lis` (per-instruction address/bytes/mnemonic
-   plus inlined source comments), `main.c.sym` and `main.map` (to convert
+   plus inlined source comments - sccz80 and sdcc use slightly different comment
+   conventions, both are handled), `main.c.sym` and `main.map` (to convert
    module-relative addresses into true linked addresses), computes cycle
    counts from a built-in Z80 opcode timing table, and maps every instruction
    back to the C source line it came from.
 4. The temp directory is deleted after every request.
+
+## Supported z88dk targets
+
+ZX Spectrum 48K, ZX Spectrum Next, Timex Sinclair 2068, CP/M, RC2014, MSX, Amstrad CPC, Game Boy,
+Sega Master System, ColecoVision, SAM Coupé, Agon Light, Sord M5, Cambridge Z88, NEC PC-88, TRS-80,
+Enterprise 128 - see `server/src/toolchains/z88dk/targets.ts` for the full whitelist. z88dk itself
+supports ~90 targets; this list is a curated, verified-working subset.
 
 ## Prerequisites
 

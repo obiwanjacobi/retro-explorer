@@ -7,6 +7,12 @@ export interface CompileTarget {
 export interface Toolchain {
   id: string;
   label: string;
+  compilers: CompilerOption[];
+}
+
+export interface CompilerOption {
+  id: string;
+  label: string;
 }
 
 export interface Diagnostic {

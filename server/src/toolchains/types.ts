@@ -7,6 +7,12 @@ export interface CompileTarget {
   toolchainId: string;
 }
 
+/** A selectable compiler backend within a toolchain, e.g. z88dk's "sccz80" vs "sdcc" front ends. */
+export interface CompilerOption {
+  id: string;
+  label: string;
+}
+
 export interface Diagnostic {
   severity: "error" | "warning";
   message: string;
@@ -58,5 +64,7 @@ export interface Toolchain {
   label: string;
   /** Compile targets this toolchain exposes. Target ids must be globally unique. */
   targets: CompileTarget[];
-  compile(source: string, targetId: string): Promise<CompileResponse>;
+  /** Selectable compiler backends within this toolchain, if it has more than one (e.g. z88dk's sccz80/sdcc). */
+  compilers?: CompilerOption[];
+  compile(source: string, targetId: string, compilerId?: string): Promise<CompileResponse>;
 }
