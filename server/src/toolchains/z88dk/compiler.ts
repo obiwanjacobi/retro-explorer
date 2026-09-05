@@ -40,7 +40,7 @@ export async function compileWithZ88dk(
   zccFlag: string,
   compilerId: string,
   clibId?: string
-): Promise<CompileResponse> {
+): Promise<Omit<CompileResponse, "compileTimeMs">> {
   return withTempWorkspace("z88dkweb-", async (tmpDir) => {
     const sourcePath = path.join(tmpDir, SOURCE_FILE_NAME);
     await fs.writeFile(sourcePath, source, "utf8");

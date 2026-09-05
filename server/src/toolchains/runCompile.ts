@@ -28,8 +28,11 @@ export async function runCompile(source: string, targetId: string, options: Comp
 
   const release = await semaphore.acquire();
   try {
-    return await toolchain.compile(source, targetId, options);
+    const startedAt = performance.now();
+    const result = await toolchain.compile(source, targetId, options);
+    return { ...result, compileTimeMs: Math.round(performance.now() - startedAt) };
   } finally {
     release();
   }
 }
+

@@ -48,6 +48,8 @@ export interface CompileResponse {
   diagnostics: Diagnostic[];
   instructions: AsmInstruction[];
   sourceLines: SourceLine[];
+  /** Wall-clock time the compile took, in milliseconds. */
+  compileTimeMs: number;
 }
 
 /** Thrown for invalid user input (bad target, source too large, etc). Caught by the route and returned as HTTP 400. */
@@ -76,5 +78,6 @@ export interface Toolchain {
   targets: CompileTarget[];
   /** Selectable compiler backends within this toolchain, if it has more than one (e.g. z88dk's sccz80/sdcc). */
   compilers?: CompilerOption[];
-  compile(source: string, targetId: string, options?: CompileOptions): Promise<CompileResponse>;
+  /** `compileTimeMs` is filled in by `runCompile` and doesn't need to be returned here. */
+  compile(source: string, targetId: string, options?: CompileOptions): Promise<Omit<CompileResponse, "compileTimeMs">>;
 }

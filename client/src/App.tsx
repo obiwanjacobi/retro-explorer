@@ -3,7 +3,8 @@ import { compile, fetchTargets, fetchToolchains } from "./api";
 import { AsmView } from "./components/AsmView";
 import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
 import { SourceEditor } from "./components/SourceEditor";
-import type { AsmInstruction, CompileTarget, Diagnostic, Toolchain } from "./types";
+import { StatusBar } from "./components/StatusBar";
+import type { AsmInstruction, CompileTarget, Diagnostic, LineRange, Toolchain } from "./types";
 import "./App.css";
 
 const DEFAULT_SOURCE = `int add(int a, int b) {
@@ -26,6 +27,8 @@ function App() {
   const [instructions, setInstructions] = useState<AsmInstruction[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [activeLine, setActiveLine] = useState<number | null>(null);
+  const [selectionRange, setSelectionRange] = useState<LineRange | null>(null);
+  const [compileTimeMs, setCompileTimeMs] = useState<number | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,10 +81,12 @@ function App() {
       const result = await compile(src, target, compiler, clib || undefined);
       setInstructions(result.instructions);
       setDiagnostics(result.diagnostics);
+      setCompileTimeMs(result.compileTimeMs);
     } catch (err) {
       setCompileError(err instanceof Error ? err.message : "Compile failed.");
       setInstructions([]);
       setDiagnostics([]);
+      setCompileTimeMs(null);
     } finally {
       setIsCompiling(false);
     }
@@ -148,13 +153,20 @@ function App() {
             diagnostics={diagnostics}
             activeLine={activeLine}
             onCursorLineChange={setActiveLine}
+            onSelectionChange={setSelectionRange}
           />
         </section>
         <section className="pane asm-pane">
-          <AsmView instructions={instructions} activeLine={activeLine} onSelectLine={setActiveLine} />
+          <AsmView
+            instructions={instructions}
+            activeLine={activeLine}
+            selectionRange={selectionRange}
+            onSelectLine={setActiveLine}
+          />
         </section>
       </main>
       <DiagnosticsPanel diagnostics={diagnostics} />
+      <StatusBar instructions={instructions} selectionRange={selectionRange} compileTimeMs={compileTimeMs} />
     </div>
   );
 }

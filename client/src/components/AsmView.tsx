@@ -1,15 +1,22 @@
-import type { AsmInstruction } from "../types";
+import type { AsmInstruction, LineRange } from "../types";
 
 interface Props {
   instructions: AsmInstruction[];
   activeLine: number | null;
+  selectionRange: LineRange | null;
   onSelectLine: (line: number | null) => void;
 }
 
-export function AsmView({ instructions, activeLine, onSelectLine }: Props) {
+export function AsmView({ instructions, activeLine, selectionRange, onSelectLine }: Props) {
   if (instructions.length === 0) {
     return <div className="asm-empty">No assembly to show yet. Compile some code.</div>;
   }
+
+  const isHighlighted = (line: number | null) => {
+    if (line === null) return false;
+    if (line === activeLine) return true;
+    return selectionRange !== null && line >= selectionRange.start && line <= selectionRange.end;
+  };
 
   return (
     <table className="asm-table">
@@ -25,7 +32,7 @@ export function AsmView({ instructions, activeLine, onSelectLine }: Props) {
         {instructions.map((ins, i) => (
           <tr
             key={i}
-            className={ins.sourceLine !== null && ins.sourceLine === activeLine ? "asm-row active" : "asm-row"}
+            className={isHighlighted(ins.sourceLine) ? "asm-row active" : "asm-row"}
             onMouseEnter={() => onSelectLine(ins.sourceLine)}
             onClick={() => onSelectLine(ins.sourceLine)}
           >

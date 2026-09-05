@@ -165,3 +165,13 @@ body {
 .active-line-highlight {
   background: rgba(9, 71, 113, 0.5);
 }
+
+.status-bar {
+  display: flex;
+  gap: 24px;
+  padding: 4px 16px;
+  background: #007acc;
+  color: #fff;
+  font-size: 12px;
+  font-family: "Cascadia Code", Consolas, monospace;
+}

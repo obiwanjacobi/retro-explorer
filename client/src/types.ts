@@ -42,4 +42,11 @@ export interface CompileResponse {
   diagnostics: Diagnostic[];
   instructions: AsmInstruction[];
   sourceLines: SourceLine[];
+  compileTimeMs: number;
+}
+
+/** An inclusive 1-based line range, used for reporting stats on a user's editor text selection. */
+export interface LineRange {
+  start: number;
+  end: number;
 }

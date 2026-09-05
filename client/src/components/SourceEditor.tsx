@@ -1,6 +1,6 @@
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import { useEffect, useRef } from "react";
-import type { Diagnostic } from "../types";
+import type { Diagnostic, LineRange } from "../types";
 
 interface Props {
   value: string;
@@ -8,9 +8,10 @@ interface Props {
   diagnostics: Diagnostic[];
   activeLine: number | null;
   onCursorLineChange: (line: number | null) => void;
+  onSelectionChange: (range: LineRange | null) => void;
 }
 
-export function SourceEditor({ value, onChange, diagnostics, activeLine, onCursorLineChange }: Props) {
+export function SourceEditor({ value, onChange, diagnostics, activeLine, onCursorLineChange, onSelectionChange }: Props) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const decorationsRef = useRef<ReturnType<NonNullable<typeof editorRef.current>["createDecorationsCollection"]> | null>(null);
@@ -21,6 +22,11 @@ export function SourceEditor({ value, onChange, diagnostics, activeLine, onCurso
     decorationsRef.current = editor.createDecorationsCollection([]);
     editor.onDidChangeCursorPosition((e) => {
       onCursorLineChange(e.position.lineNumber);
+    });
+    editor.onDidChangeCursorSelection((e) => {
+      onSelectionChange(
+        e.selection.isEmpty() ? null : { start: e.selection.startLineNumber, end: e.selection.endLineNumber }
+      );
     });
   };
 
