@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
-import { compile, CompileRequestError } from "../compile/compileService.js";
-import { COMPILE_TARGETS } from "../compile/targets.js";
+import { listTargets } from "../toolchains/registry.js";
+import { runCompile } from "../toolchains/runCompile.js";
+import { CompileRequestError } from "../toolchains/types.js";
 
 const compileBodySchema = z.object({
   source: z.string().max(200_000),
@@ -11,7 +12,7 @@ const compileBodySchema = z.object({
 export const router = Router();
 
 router.get("/targets", (_req, res) => {
-  res.json(COMPILE_TARGETS.map(({ id, label }) => ({ id, label })));
+  res.json(listTargets());
 });
 
 router.post("/compile", async (req, res) => {
@@ -22,7 +23,7 @@ router.post("/compile", async (req, res) => {
   }
 
   try {
-    const result = await compile(parsed.data.source, parsed.data.targetId);
+    const result = await runCompile(parsed.data.source, parsed.data.targetId);
     res.json(result);
   } catch (err) {
     if (err instanceof CompileRequestError) {

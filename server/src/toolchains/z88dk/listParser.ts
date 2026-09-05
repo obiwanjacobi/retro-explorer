@@ -1,5 +1,5 @@
-import type { AsmInstruction, Diagnostic, SourceLine } from "./types.js";
-import { cyclesForBytes, hexBytesToArray } from "./z80timing.js";
+import { cyclesForBytes, hexBytesToArray } from "../shared/z80timing.js";
+import type { AsmInstruction, Diagnostic, SourceLine } from "../types.js";
 
 const INSTRUCTION_ROW = /^\s*\d+\s+([0-9a-fA-F]{4})\s+([0-9a-fA-F]+)\s+(.*)$/;
 const NUMBERED_ROW = /^\s*\d+\s+(.*)$/;
@@ -40,6 +40,43 @@ function toHex4(n: number): string {
   return (n & 0xffff).toString(16).padStart(4, "0");
 }
 
+const RESERVED_OPERAND_WORDS = new Set([
+  "a", "b", "c", "d", "e", "h", "l", "i", "r",
+  "af", "bc", "de", "hl", "sp", "ix", "iy",
+  "ixh", "ixl", "iyh", "iyl",
+  "nz", "z", "nc", "po", "pe", "p", "m",
+]);
+
+/**
+ * The per-module .lis listing is generated before cross-module linking, so
+ * any instruction referencing an external symbol (a call/jp target, or a
+ * global variable address) is emitted with a placeholder "0000" operand.
+ * This patches that placeholder with the symbol's real linked address (from
+ * the .map file) so the displayed bytes match the address shown for the
+ * symbol's own definition.
+ */
+function resolveUnlinkedOperand(
+  mnemonic: string,
+  bytesHex: string,
+  linkedSymbols: Map<string, number>
+): string {
+  if (!bytesHex.toLowerCase().endsWith("0000")) return bytesHex;
+
+  const spaceIdx = mnemonic.indexOf(" ");
+  const operandsStr = spaceIdx === -1 ? "" : mnemonic.slice(spaceIdx + 1);
+  const candidates = (operandsStr.match(/[A-Za-z_][A-Za-z0-9_]*/g) ?? []).filter(
+    (tok) => !RESERVED_OPERAND_WORDS.has(tok.toLowerCase())
+  );
+  if (candidates.length !== 1) return bytesHex;
+
+  const address = linkedSymbols.get(candidates[0]);
+  if (address === undefined) return bytesHex;
+
+  const lo = (address & 0xff).toString(16).padStart(2, "0");
+  const hi = ((address >> 8) & 0xff).toString(16).padStart(2, "0");
+  return bytesHex.slice(0, -4) + lo + hi;
+}
+
 /**
  * Parses a `<file>.c.lis` listing (produced with --list --c-code-in-asm) for
  * the given source file name, extracting per-instruction address/bytes/
@@ -50,7 +87,8 @@ export function parseCLis(
   lisText: string,
   sourceFileName: string,
   sourceLines: SourceLine[],
-  addressBase: number
+  addressBase: number,
+  linkedSymbols: Map<string, number>
 ): AsmInstruction[] {
   const nonBlank = sourceLines.filter((l) => l.text.trim().length > 0);
   let sourcePointer = 0;
@@ -76,11 +114,12 @@ export function parseCLis(
 
     const instrMatch = INSTRUCTION_ROW.exec(rawLine);
     if (instrMatch) {
-      const [, relAddrHex, bytesHex, rest] = instrMatch;
+      const [, relAddrHex, rawBytesHex, rest] = instrMatch;
       const semiIdx = rest.indexOf(";");
       const mnemonic = (semiIdx === -1 ? rest : rest.slice(0, semiIdx)).trim().replace(/\s+/g, " ");
       const comment = semiIdx === -1 ? null : rest.slice(semiIdx + 1).trim() || null;
       const trueAddr = (parseInt(relAddrHex, 16) + addressBase) & 0xffff;
+      const bytesHex = resolveUnlinkedOperand(mnemonic, rawBytesHex, linkedSymbols);
       instructions.push({
         sourceLine: currentSourceLine,
         address: toHex4(trueAddr),

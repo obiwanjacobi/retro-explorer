@@ -3,7 +3,8 @@
  *
  * These are the standard, publicly documented Z80 CPU timings (as published
  * e.g. in the Zilog Z80 CPU User Manual). They are factual technical
- * specifications, not creative content.
+ * specifications, not creative content, and apply to any Z80 assembly output
+ * regardless of which compiler toolchain produced it.
  *
  * For conditional instructions (JR cc, JP cc is NOT conditional in timing,
  * CALL cc, RET cc, DJNZ) the result is returned as "taken/notTaken".
