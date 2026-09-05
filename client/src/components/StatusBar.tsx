@@ -28,7 +28,7 @@ export function StatusBar({ instructions, selectionRange, compileTimeMs }: Props
     else cycles += n;
   }
 
-  const scopeLabel = selectionRange ? "selection" : "program";
+  const scopeLabel = selectionRange === null ? "program" : selectionRange.start === selectionRange.end ? "line" : "selection";
 
   return (
     <footer className="status-bar">

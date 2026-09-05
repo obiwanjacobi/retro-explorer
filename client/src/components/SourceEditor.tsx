@@ -24,9 +24,9 @@ export function SourceEditor({ value, onChange, diagnostics, activeLine, onCurso
       onCursorLineChange(e.position.lineNumber);
     });
     editor.onDidChangeCursorSelection((e) => {
-      onSelectionChange(
-        e.selection.isEmpty() ? null : { start: e.selection.startLineNumber, end: e.selection.endLineNumber }
-      );
+      // Report the caret's line even when nothing is actually selected, so the
+      // status bar tracks cursor position, not just deliberate text selections.
+      onSelectionChange({ start: e.selection.startLineNumber, end: e.selection.endLineNumber });
     });
   };
 
