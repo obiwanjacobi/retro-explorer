@@ -103,6 +103,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, targetId, compilerId, clibId]);
 
+  const handleAsmClickLine = (line: number | null) => {
+    setActiveLine(line);
+    setSelectionRange(line !== null ? { start: line, end: line } : null);
+  };
+
   return (
     <div className="app">
       <header className="toolbar">
@@ -161,7 +166,8 @@ function App() {
             instructions={instructions}
             activeLine={activeLine}
             selectionRange={selectionRange}
-            onSelectLine={setActiveLine}
+            onHoverLine={setActiveLine}
+            onClickLine={handleAsmClickLine}
           />
         </section>
       </main>

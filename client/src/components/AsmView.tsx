@@ -4,10 +4,11 @@ interface Props {
   instructions: AsmInstruction[];
   activeLine: number | null;
   selectionRange: LineRange | null;
-  onSelectLine: (line: number | null) => void;
+  onHoverLine: (line: number | null) => void;
+  onClickLine: (line: number | null) => void;
 }
 
-export function AsmView({ instructions, activeLine, selectionRange, onSelectLine }: Props) {
+export function AsmView({ instructions, activeLine, selectionRange, onHoverLine, onClickLine }: Props) {
   if (instructions.length === 0) {
     return <div className="asm-empty">No assembly to show yet. Compile some code.</div>;
   }
@@ -33,8 +34,8 @@ export function AsmView({ instructions, activeLine, selectionRange, onSelectLine
           <tr
             key={i}
             className={isHighlighted(ins.sourceLine) ? "asm-row active" : "asm-row"}
-            onMouseEnter={() => onSelectLine(ins.sourceLine)}
-            onClick={() => onSelectLine(ins.sourceLine)}
+            onMouseEnter={() => onHoverLine(ins.sourceLine)}
+            onClick={() => onClickLine(ins.sourceLine)}
           >
             <td className="mono">{ins.address}</td>
             <td className="mono bytes">{ins.bytes}</td>
