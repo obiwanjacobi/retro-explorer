@@ -1,0 +1,19 @@
+{
+  "name": "z88dk-web",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev --workspace client",
+    "dev:server": "npm run dev --workspace server",
+    "build:client": "npm run build --workspace client",
+    "build:server": "npm run build --workspace server"
+  },
+  "overrides": {
+    "qs": "6.16.0",
+    "dompurify": "3.4.13"
+  }
+}
