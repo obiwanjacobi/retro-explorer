@@ -1,4 +1,10 @@
-import type { CompileResponse, CompileTarget } from "./types";
+import type { CompileResponse, CompileTarget, Toolchain } from "./types";
+
+export async function fetchToolchains(): Promise<Toolchain[]> {
+  const res = await fetch("/api/toolchains");
+  if (!res.ok) throw new Error("Failed to load toolchains.");
+  return res.json();
+}
 
 export async function fetchTargets(): Promise<CompileTarget[]> {
   const res = await fetch("/api/targets");

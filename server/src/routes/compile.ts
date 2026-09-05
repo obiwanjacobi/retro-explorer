@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { listTargets } from "../toolchains/registry.js";
+import { listTargets, listToolchains } from "../toolchains/registry.js";
 import { runCompile } from "../toolchains/runCompile.js";
 import { CompileRequestError } from "../toolchains/types.js";
 
@@ -13,6 +13,10 @@ export const router = Router();
 
 router.get("/targets", (_req, res) => {
   res.json(listTargets());
+});
+
+router.get("/toolchains", (_req, res) => {
+  res.json(listToolchains());
 });
 
 router.post("/compile", async (req, res) => {

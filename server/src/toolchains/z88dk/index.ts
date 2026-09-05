@@ -5,7 +5,8 @@ import { resolveZ88dkTarget, Z88DK_TARGETS } from "./targets.js";
 /** The z88dk toolchain: compiles C via zcc/sccz80 and z80asm for various retro Z80 targets. */
 export const z88dkToolchain: Toolchain = {
   id: "z88dk",
-  targets: Z88DK_TARGETS.map(({ id, label }) => ({ id, label })),
+  label: "z88dk",
+  targets: Z88DK_TARGETS.map(({ id, label }) => ({ id, label, toolchainId: "z88dk" })),
   compile(source, targetId) {
     const target = resolveZ88dkTarget(targetId);
     if (!target) {

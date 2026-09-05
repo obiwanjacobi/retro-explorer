@@ -3,6 +3,8 @@ export interface CompileTarget {
   id: string;
   /** Human readable label for the UI. */
   label: string;
+  /** Id of the toolchain this target belongs to, e.g. "z88dk". */
+  toolchainId: string;
 }
 
 export interface Diagnostic {
@@ -50,8 +52,10 @@ export class CompileRequestError extends Error {}
  * limiting, routing) lives outside of it.
  */
 export interface Toolchain {
-  /** Unique id, e.g. "z88dk". Not exposed directly to the client. */
+  /** Unique id, e.g. "z88dk". */
   id: string;
+  /** Human readable label for the UI. */
+  label: string;
   /** Compile targets this toolchain exposes. Target ids must be globally unique. */
   targets: CompileTarget[];
   compile(source: string, targetId: string): Promise<CompileResponse>;

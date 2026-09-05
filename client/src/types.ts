@@ -1,6 +1,12 @@
 export interface CompileTarget {
   id: string;
   label: string;
+  toolchainId: string;
+}
+
+export interface Toolchain {
+  id: string;
+  label: string;
 }
 
 export interface Diagnostic {

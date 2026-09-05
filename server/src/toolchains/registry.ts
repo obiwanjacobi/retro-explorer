@@ -20,6 +20,10 @@ export function listTargets(): CompileTarget[] {
   return toolchains.flatMap((t) => t.targets);
 }
 
+export function listToolchains(): Array<{ id: string; label: string }> {
+  return toolchains.map(({ id, label }) => ({ id, label }));
+}
+
 export function findToolchainForTarget(targetId: string): Toolchain | undefined {
   return targetOwners.get(targetId);
 }
