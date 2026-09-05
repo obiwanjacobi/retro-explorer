@@ -2,6 +2,7 @@ export interface CompileTarget {
   id: string;
   label: string;
   toolchainId: string;
+  clibs?: CompilerOption[];
 }
 
 export interface Toolchain {

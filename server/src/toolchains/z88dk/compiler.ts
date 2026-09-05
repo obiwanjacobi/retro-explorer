@@ -34,8 +34,13 @@ function runZcc(args: string[], cwd: string): Promise<{ stdout: string; stderr: 
   });
 }
 
-/** Compiles C source with zcc (z88dk) for the given `+target` flag and front-end compiler (sccz80/sdcc). */
-export async function compileWithZ88dk(source: string, zccFlag: string, compilerId: string): Promise<CompileResponse> {
+/** Compiles C source with zcc (z88dk) for the given `+target` flag, front-end compiler (sccz80/sdcc), and optional C library variant. */
+export async function compileWithZ88dk(
+  source: string,
+  zccFlag: string,
+  compilerId: string,
+  clibId?: string
+): Promise<CompileResponse> {
   return withTempWorkspace("z88dkweb-", async (tmpDir) => {
     const sourcePath = path.join(tmpDir, SOURCE_FILE_NAME);
     await fs.writeFile(sourcePath, source, "utf8");
@@ -43,6 +48,7 @@ export async function compileWithZ88dk(source: string, zccFlag: string, compiler
     const args = [
       zccFlag,
       `-compiler=${compilerId}`,
+      ...(clibId ? [`-clib=${clibId}`] : []),
       "--list",
       "--c-code-in-asm",
       "-m",

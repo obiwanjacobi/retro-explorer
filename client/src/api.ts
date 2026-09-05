@@ -12,11 +12,16 @@ export async function fetchTargets(): Promise<CompileTarget[]> {
   return res.json();
 }
 
-export async function compile(source: string, targetId: string, compilerId?: string): Promise<CompileResponse> {
+export async function compile(
+  source: string,
+  targetId: string,
+  compilerId?: string,
+  clibId?: string
+): Promise<CompileResponse> {
   const res = await fetch("/api/compile", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ source, targetId, compilerId }),
+    body: JSON.stringify({ source, targetId, compilerId, clibId }),
   });
   const body = await res.json();
   if (!res.ok) {

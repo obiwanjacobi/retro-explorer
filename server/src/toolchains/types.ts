@@ -5,6 +5,8 @@ export interface CompileTarget {
   label: string;
   /** Id of the toolchain this target belongs to, e.g. "z88dk". */
   toolchainId: string;
+  /** Selectable C library variants for this target, if any (e.g. z88dk's "new"/"ansi"/"noclib"). */
+  clibs?: CompilerOption[];
 }
 
 /** A selectable compiler backend within a toolchain, e.g. z88dk's "sccz80" vs "sdcc" front ends. */
@@ -51,6 +53,14 @@ export interface CompileResponse {
 /** Thrown for invalid user input (bad target, source too large, etc). Caught by the route and returned as HTTP 400. */
 export class CompileRequestError extends Error {}
 
+/** Optional per-compile choices a toolchain may support, beyond the target itself. */
+export interface CompileOptions {
+  /** Which compiler backend to use, if the toolchain offers more than one (see `Toolchain.compilers`). */
+  compilerId?: string;
+  /** Which C library variant to use, if the target offers more than one (see `CompileTarget.clibs`). */
+  clibId?: string;
+}
+
 /**
  * A pluggable C-to-Z80 compiler backend (z88dk, sdcc, ...). Each toolchain
  * owns its own target list and knows how to turn C source into a
@@ -66,5 +76,5 @@ export interface Toolchain {
   targets: CompileTarget[];
   /** Selectable compiler backends within this toolchain, if it has more than one (e.g. z88dk's sccz80/sdcc). */
   compilers?: CompilerOption[];
-  compile(source: string, targetId: string, compilerId?: string): Promise<CompileResponse>;
+  compile(source: string, targetId: string, options?: CompileOptions): Promise<CompileResponse>;
 }

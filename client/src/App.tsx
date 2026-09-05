@@ -21,6 +21,7 @@ function App() {
   const [targets, setTargets] = useState<CompileTarget[]>([]);
   const [targetId, setTargetId] = useState("zx");
   const [compilerId, setCompilerId] = useState<string | undefined>(undefined);
+  const [clibId, setClibId] = useState("");
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [instructions, setInstructions] = useState<AsmInstruction[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
@@ -48,6 +49,8 @@ function App() {
   const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId);
   const currentToolchain = toolchains.find((tc) => tc.id === toolchainId);
   const compilers = currentToolchain?.compilers ?? [];
+  const currentTarget = targets.find((t) => t.id === targetId);
+  const clibs = currentTarget?.clibs ?? [];
 
   useEffect(() => {
     if (targetsForToolchain.length > 0 && !targetsForToolchain.some((t) => t.id === targetId)) {
@@ -61,11 +64,18 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolchainId, targets, toolchains]);
 
-  const runCompile = async (src: string, target: string, compiler: string | undefined) => {
+  useEffect(() => {
+    if (clibId !== "" && !clibs.some((c) => c.id === clibId)) {
+      setClibId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetId, targets]);
+
+  const runCompile = async (src: string, target: string, compiler: string | undefined, clib: string) => {
     setIsCompiling(true);
     setCompileError(null);
     try {
-      const result = await compile(src, target, compiler);
+      const result = await compile(src, target, compiler, clib || undefined);
       setInstructions(result.instructions);
       setDiagnostics(result.diagnostics);
     } catch (err) {
@@ -80,13 +90,13 @@ function App() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      runCompile(source, targetId, compilerId);
+      runCompile(source, targetId, compilerId, clibId);
     }, 700);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, targetId, compilerId]);
+  }, [source, targetId, compilerId, clibId]);
 
   return (
     <div className="app">
@@ -115,7 +125,17 @@ function App() {
             ))}
           </select>
         ) : null}
-        <button onClick={() => runCompile(source, targetId, compilerId)} disabled={isCompiling}>
+        {clibs.length > 0 ? (
+          <select value={clibId} onChange={(e) => setClibId(e.target.value)}>
+            <option value="">C library: target default</option>
+            {clibs.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        <button onClick={() => runCompile(source, targetId, compilerId, clibId)} disabled={isCompiling}>
           {isCompiling ? "Compiling…" : "Compile"}
         </button>
         {compileError ? <span className="server-error">{compileError}</span> : null}

@@ -8,6 +8,7 @@ const compileBodySchema = z.object({
   source: z.string().max(200_000),
   targetId: z.string().max(64),
   compilerId: z.string().max(64).optional(),
+  clibId: z.string().max(64).optional(),
 });
 
 export const router = Router();
@@ -28,7 +29,10 @@ router.post("/compile", async (req, res) => {
   }
 
   try {
-    const result = await runCompile(parsed.data.source, parsed.data.targetId, parsed.data.compilerId);
+    const result = await runCompile(parsed.data.source, parsed.data.targetId, {
+      compilerId: parsed.data.compilerId,
+      clibId: parsed.data.clibId,
+    });
     res.json(result);
   } catch (err) {
     if (err instanceof CompileRequestError) {

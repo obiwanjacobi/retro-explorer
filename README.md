@@ -32,20 +32,19 @@ server/src/
       index.ts                    Exports the `Toolchain` implementation
       config.ts                    Z88DK_HOME / zcc path resolution
       targets.ts                    Whitelisted `+target` flags
-      compiler.ts                    Invokes zcc, reads back .lis/.map/.c.sym
-      listParser.ts                  Parses z88dk's .lis/.map listing format
-```
-
-To add another compiler (e.g. sdcc), create `server/src/toolchains/sdcc/` implementing the
-`Toolchain` interface from `toolchains/types.ts`, then add it to the list in
+        compilers.ts                   SCCZ80/SDCC compiler backend options
+        clibDiscovery.ts                Reads each target's .cfg to discover its `-clib=` variants
+        compiler.ts                     Invokes zcc, reads back .lis/.map/.c.sym
+        listParser.ts                    Parses z88dk's .lis/.map listing format
 `toolchains/registry.ts`. Nothing in `routes/`, `runCompile.ts`, or the client needs to change -
 targets are dispatched to their owning toolchain automatically by id.
 
 ## How it works
 
-1. The client posts C source + a target id + a compiler id ("sccz80" or "sdcc") to `POST /api/compile`.
+1. The client posts C source + a target id + a compiler id ("sccz80" or "sdcc") + an optional
+   C library id to `POST /api/compile`.
 2. The server writes the source to an isolated temp directory and runs:
-   `zcc +<target> -compiler=<sccz80|sdcc> --list --c-code-in-asm -m -s -no-cleanup -o main main.c`
+   `zcc +<target> -compiler=<sccz80|sdcc> [-clib=<id>] --list --c-code-in-asm -m -s -no-cleanup -o main main.c`
 3. It parses the resulting `main.c.lis` (per-instruction address/bytes/mnemonic
    plus inlined source comments - sccz80 and sdcc use slightly different comment
    conventions, both are handled), `main.c.sym` and `main.map` (to convert
@@ -53,6 +52,17 @@ targets are dispatched to their owning toolchain automatically by id.
    counts from a built-in Z80 opcode timing table, and maps every instruction
    back to the C source line it came from.
 4. The temp directory is deleted after every request.
+
+## C library variants
+
+Each z88dk target defines its own set of C library variants (e.g. `default`, `new`, `ansi`,
+`noclib`) via `-clib=`. Rather than hardcoding these, `clibDiscovery.ts` reads the actual
+`<target>.cfg` file from the installed z88dk and lists whatever it finds, excluding the
+`sdcc_ix`/`sdcc_iy`/`clang_*` variants (those bake in a specific compiler backend, which is already
+controlled by the separate compiler dropdown). The UI's default option omits `-clib` entirely,
+letting the target use its own built-in default - some targets define a `default` clib that isn't
+actually buildable in a given z88dk build, so explicit selections can fail; that's surfaced as a
+normal compile diagnostic, not a crash.
 
 ## Supported z88dk targets
 
