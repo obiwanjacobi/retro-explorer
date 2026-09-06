@@ -18,6 +18,16 @@ void main() {
 }
 `;
 
+const SOURCE_STORAGE_KEY = "z88dk-web:source";
+
+function loadStoredSource(): string {
+  try {
+    return localStorage.getItem(SOURCE_STORAGE_KEY) ?? DEFAULT_SOURCE;
+  } catch {
+    return DEFAULT_SOURCE;
+  }
+}
+
 function App() {
   const [cpus, setCpus] = useState<Cpu[]>([]);
   const [cpuId, setCpuId] = useState("z80");
@@ -26,7 +36,7 @@ function App() {
   const [targets, setTargets] = useState<CompileTarget[]>([]);
   const [targetId, setTargetId] = useState("z80");
   const [platformOptions, setPlatformOptions] = useState<PlatformOptions>({});
-  const [source, setSource] = useState(DEFAULT_SOURCE);
+  const [source, setSource] = useState(loadStoredSource);
   const [instructions, setInstructions] = useState<AsmInstruction[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [activeLine, setActiveLine] = useState<number | null>(null);
@@ -109,6 +119,14 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, targetId, platformOptions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SOURCE_STORAGE_KEY, source);
+    } catch {
+      // ignore storage errors (e.g. quota exceeded, private browsing)
+    }
+  }, [source]);
 
   const handleCiteSelectionChange = (range: LineRange | null) => {
     setCiteRange(range);
