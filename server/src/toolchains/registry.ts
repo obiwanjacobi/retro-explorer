@@ -15,8 +15,8 @@ export function listTargets(): CompileTarget[] {
   return toolchains.flatMap((t) => t.targets);
 }
 
-export function listToolchains(): Array<{ id: string; label: string; cpus: string[]; compilers: CompilerOption[] }> {
-  return toolchains.map(({ id, label, cpus, compilers }) => ({ id, label, cpus, compilers: compilers ?? [] }));
+export function listToolchains(): Array<{ id: string; label: string; cpus: string[]; version: string; compilers: CompilerOption[] }> {
+  return toolchains.map(({ id, label, cpus, version, compilers }) => ({ id, label, cpus, version, compilers: compilers ?? [] }));
 }
 
 /** CPUs actually supported by at least one registered toolchain, in the static display order from `cpus.ts`. */

@@ -10,6 +10,7 @@ export interface Toolchain {
   id: string;
   label: string;
   cpus: string[];
+  version: string;
   compilers: CompilerOption[];
 }
 

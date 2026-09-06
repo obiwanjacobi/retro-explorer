@@ -80,6 +80,8 @@ export interface Toolchain {
   label: string;
   /** Ids of the CPUs this toolchain can target (see `toolchains/cpus.ts`); used to filter the platform picker by selected CPU. */
   cpus: string[];
+  /** Version of the installed toolchain, detected from the compiler binary itself. Not yet part of `id` - today only one version of each toolchain can be registered at a time, but this is the field that would let multiple versions coexist as distinct registry entries in the future. */
+  version: string;
   /** Compile targets this toolchain exposes. Target ids must be globally unique. */
   targets: CompileTarget[];
   /** Selectable compiler backends within this toolchain, if it has more than one (e.g. z88dk's sccz80/sdcc). */

@@ -134,7 +134,7 @@ function App() {
         <select value={toolchainId} onChange={(e) => setToolchainId(e.target.value)}>
           {toolchainsForCpu.map((tc) => (
             <option key={tc.id} value={tc.id}>
-              {tc.label}
+              {tc.label} ({tc.version})
             </option>
           ))}
         </select>

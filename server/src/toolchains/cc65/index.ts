@@ -1,5 +1,6 @@
 import type { Toolchain } from "../types.js";
 import { compileWithCc65 } from "./compiler.js";
+import { cc65Config } from "./config.js";
 import { CC65_TARGETS, resolveCc65Target } from "./targets.js";
 
 /** The cc65 toolchain: compiles C via cl65 (cc65/ca65/ld65) for various retro 6502 targets. */
@@ -7,6 +8,7 @@ export const cc65Toolchain: Toolchain = {
   id: "cc65",
   label: "cc65",
   cpus: ["6502"],
+  version: cc65Config.version,
   targets: CC65_TARGETS.map(({ id, label }) => ({
     id,
     label,

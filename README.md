@@ -8,6 +8,25 @@ C source lines and their generated instructions.
 Currently supported: [z88dk](https://z88dk.org/site/) (Z80) and [cc65](https://cc65.github.io/) (6502).
 More platforms (SDCC, CMOC) are planned - see "Adding a new platform" below.
 
+## Deployment (Docker / Azure)
+
+The root [`Dockerfile`](Dockerfile) packages everything into a single deployable image: it builds
+z88dk (with zsdcc) and cc65 from source in their own stages, builds the client and server, and
+copies all of it into an Ubuntu-based runtime image that serves the built client as static files
+alongside the API - no external toolchain install or `.env` is needed at runtime, `Z88DK_HOME`/
+`CC65_HOME` point at the toolchains baked into the image.
+
+```
+docker build -t retro-explorer .
+docker run -p 4000:4000 retro-explorer
+```
+
+The z88dk/cc65 build stages are the slow part of the image build (zsdcc in particular); they're
+independent of the app-builder stage so app-only changes reuse Docker's cache for them. Push the
+built image to Azure Container Registry and deploy it to Azure Container Apps (or App Service for
+Containers) - any container host that runs a plain Docker image works, since the app is entirely
+self-contained.
+
 ## Project layout
 
 ```text

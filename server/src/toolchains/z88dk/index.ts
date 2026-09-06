@@ -2,6 +2,7 @@ import type { Toolchain } from "../types.js";
 import { getZ88dkClibs } from "./clibDiscovery.js";
 import { compileWithZ88dk } from "./compiler.js";
 import { Z88DK_COMPILERS } from "./compilers.js";
+import { z88dkConfig } from "./config.js";
 import { resolveZ88dkTarget, Z88DK_TARGETS } from "./targets.js";
 
 /** The z88dk toolchain: compiles C via zcc (sccz80 or sdcc front end) and z80asm for various retro Z80 targets. */
@@ -9,6 +10,7 @@ export const z88dkToolchain: Toolchain = {
   id: "z88dk",
   label: "z88dk",
   cpus: ["z80"],
+  version: z88dkConfig.version,
   targets: Z88DK_TARGETS.map(({ id, label }) => ({
     id,
     label,
