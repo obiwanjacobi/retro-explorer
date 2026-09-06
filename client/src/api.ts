@@ -35,11 +35,12 @@ export function compileZ88dk(
   source: string,
   targetId: string,
   compilerId?: string,
-  clibId?: string
+  clibId?: string,
+  optLevel?: string
 ): Promise<CompileResponse> {
-  return postCompile("/api/z88dk/compile", { source, targetId, compilerId, clibId });
+  return postCompile("/api/z88dk/compile", { source, targetId, compilerId, clibId, optLevel });
 }
 
-export function compileCc65(source: string, targetId: string): Promise<CompileResponse> {
-  return postCompile("/api/cc65/compile", { source, targetId });
+export function compileCc65(source: string, targetId: string, optLevel?: string): Promise<CompileResponse> {
+  return postCompile("/api/cc65/compile", { source, targetId, optLevel });
 }

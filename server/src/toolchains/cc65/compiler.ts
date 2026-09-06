@@ -33,8 +33,12 @@ function runCl65(args: string[], cwd: string): Promise<{ stdout: string; stderr:
   });
 }
 
-/** Compiles C source with cl65 (cc65) for the given `-t` target system. */
-export async function compileWithCc65(source: string, ccTarget: string): Promise<Omit<CompileResponse, "compileTimeMs">> {
+/** Compiles C source with cl65 (cc65) for the given `-t` target system, with an optional `-O`/`-Oi`/`-Or`/`-Os` optimization flag. */
+export async function compileWithCc65(
+  source: string,
+  ccTarget: string,
+  optLevel?: string
+): Promise<Omit<CompileResponse, "compileTimeMs">> {
   return withTempWorkspace("cc65web-", async (tmpDir) => {
     const sourcePath = path.join(tmpDir, SOURCE_FILE_NAME);
     await fs.writeFile(sourcePath, source, "utf8");
@@ -42,6 +46,7 @@ export async function compileWithCc65(source: string, ccTarget: string): Promise
     const args = [
       "-t",
       ccTarget,
+      ...(optLevel ? [`-${optLevel}`] : []),
       "-g",
       "-T",
       "-l",
@@ -52,6 +57,8 @@ export async function compileWithCc65(source: string, ccTarget: string): Promise
       `${OUTPUT_NAME}.bin`,
       SOURCE_FILE_NAME,
     ];
+
+    const commandLine = ["cl65", ...args].join(" ");
 
     const { stdout, stderr } = await runCl65(args, tmpDir);
     const combinedOutput = `${stdout}\n${stderr}`.split(tmpDir).join("").split(sourcePath).join(SOURCE_FILE_NAME);
@@ -74,6 +81,7 @@ export async function compileWithCc65(source: string, ccTarget: string): Promise
           diagnostics.length > 0 ? diagnostics : [{ severity: "error" as const, message: combinedOutput.trim() || "Compilation failed." }],
         instructions: [],
         sourceLines,
+        commandLine,
       };
     }
 
@@ -85,6 +93,7 @@ export async function compileWithCc65(source: string, ccTarget: string): Promise
       diagnostics,
       instructions,
       sourceLines,
+      commandLine,
     };
   });
 }

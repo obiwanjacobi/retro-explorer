@@ -21,5 +21,7 @@ export interface PlatformProvider {
   id: string;
   /** Extra toolbar controls for this platform, or null if it has none. */
   ToolbarOptions: ComponentType<PlatformToolbarProps> | null;
+  /** Replaces the plain Compile button (e.g. z88dk's "Compile O2" split button with an optimization-level menu), or null/omitted for the plain default button. */
+  CompileControl?: ComponentType<PlatformToolbarProps & { onCompile: () => void; isCompiling: boolean }> | null;
   compile(source: string, targetId: string, options: PlatformOptions): Promise<CompileResponse>;
 }

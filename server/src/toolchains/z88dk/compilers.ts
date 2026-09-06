@@ -5,7 +5,7 @@ export interface Z88dkCompiler {
 
 /** The C front-end compilers bundled with z88dk; passed via zcc's `-compiler=` flag. */
 export const Z88DK_COMPILERS: Z88dkCompiler[] = [
-  { id: "sccz80", label: "SCCZ80 (default)" },
+  { id: "sccz80", label: "SCCZ80" },
   { id: "sdcc", label: "SDCC" },
 ];
 

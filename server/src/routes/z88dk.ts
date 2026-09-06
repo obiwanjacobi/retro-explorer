@@ -11,6 +11,7 @@ const compileBodySchema = z.object({
   targetId: z.string().max(64),
   compilerId: z.string().max(64).optional(),
   clibId: z.string().max(64).optional(),
+  optLevel: z.enum(["0", "1", "2", "3"]).optional(),
 });
 
 export const router = Router();
@@ -21,7 +22,7 @@ router.post("/compile", async (req, res) => {
     res.status(400).json({ error: "Invalid request body.", details: parsed.error.issues });
     return;
   }
-  const { source, targetId, compilerId, clibId } = parsed.data;
+  const { source, targetId, compilerId, clibId, optLevel } = parsed.data;
 
   const target = z88dkToolchain.targets.find((t) => t.id === targetId);
   if (!target) {
@@ -38,7 +39,7 @@ router.post("/compile", async (req, res) => {
   }
 
   try {
-    const result = await runCompile(source, targetId, z88dkToolchain, { compilerId, clibId });
+    const result = await runCompile(source, targetId, z88dkToolchain, { compilerId, clibId, optLevel });
     res.json(result);
   } catch (err) {
     if (err instanceof CompileRequestError) {

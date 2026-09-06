@@ -25,6 +25,6 @@ export const z88dkToolchain: Toolchain = {
       // The registry only ever dispatches ids taken from `targets` above, so this indicates a bug, not bad user input.
       throw new Error(`z88dk toolchain has no target registered for id "${targetId}".`);
     }
-    return compileWithZ88dk(source, target.zccFlag, options.compilerId ?? "sccz80", options.clibId);
+    return compileWithZ88dk(source, target.zccFlag, options.compilerId ?? "sccz80", options.clibId, options.optLevel);
   },
 };

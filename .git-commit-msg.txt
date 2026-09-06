@@ -1,0 +1,20 @@
+Add optimization level controls for z88dk and cc65, plus status bar improvements
+
+- z88dk: new optLevel option (0-3) maps to sccz80's -O<n> or sdcc's -SO<n>
+  peephole optimizer flag, validated server-side and threaded through
+  compileWithZ88dk into the zcc invocation.
+- cc65: new optLevel option (O/Oi/Or/Os) maps directly to cl65's own
+  optimization flags, validated server-side and threaded through
+  compileWithCc65 into the cl65 invocation.
+- Client: replaced the plain Compile button with a per-platform
+  CompileControl slot on PlatformProvider. Both platforms now render a
+  single split button (e.g. "Compile O2") with an attached caret that
+  opens a menu to pick the optimization level - extracted into a shared
+  SplitCompileButton component reused by both platforms' index.tsx.
+- CompileResponse now includes the exact command line invoked (zcc/cl65 +
+  args); StatusBar shows it at the end, click-to-copy with "Copied!"
+  feedback, and it grows to fill the remaining status bar width instead
+  of being capped at a fixed max-width.
+- StatusBar condensed: byte/cycle subtotal is now "<Scope> <n>B/<n>T"
+  with a plain-English hover tooltip ("Program: 38 bytes and 238
+  cycles"), and the compile time label was dropped (just "123ms").

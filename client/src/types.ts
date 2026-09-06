@@ -52,6 +52,7 @@ export interface CompileResponse {
   instructions: AsmInstruction[];
   sourceLines: SourceLine[];
   compileTimeMs: number;
+  commandLine: string;
 }
 
 /** An inclusive 1-based line range, used for reporting stats on a user's editor text selection. */

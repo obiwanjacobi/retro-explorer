@@ -43,6 +43,7 @@ function App() {
   const [citeRange, setCiteRange] = useState<LineRange | null>(null);
   const [asmRange, setAsmRange] = useState<LineRange | null>(null);
   const [compileTimeMs, setCompileTimeMs] = useState<number | null>(null);
+  const [commandLine, setCommandLine] = useState<string | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,11 +100,13 @@ function App() {
       setInstructions(result.instructions);
       setDiagnostics(result.diagnostics);
       setCompileTimeMs(result.compileTimeMs);
+      setCommandLine(result.commandLine);
     } catch (err) {
       setCompileError(err instanceof Error ? err.message : "Compile failed.");
       setInstructions([]);
       setDiagnostics([]);
       setCompileTimeMs(null);
+      setCommandLine(null);
     } finally {
       setIsCompiling(false);
     }
@@ -172,9 +175,23 @@ function App() {
             onOptionsChange={setPlatformOptions}
           />
         ) : null}
-        <button onClick={() => runCompile(source, targetId, platformOptions)} disabled={isCompiling}>
-          {isCompiling ? "Compiling…" : "Compile"}
-        </button>
+        <div className="compile-group">
+          {provider?.CompileControl && currentTarget && currentToolchain ? (
+            <provider.CompileControl
+              target={currentTarget}
+              toolchain={currentToolchain}
+              cpuId={cpuId}
+              options={platformOptions}
+              onOptionsChange={setPlatformOptions}
+              onCompile={() => runCompile(source, targetId, platformOptions)}
+              isCompiling={isCompiling}
+            />
+          ) : (
+            <button onClick={() => runCompile(source, targetId, platformOptions)} disabled={isCompiling}>
+              {isCompiling ? "Compiling…" : "Compile"}
+            </button>
+          )}
+        </div>
         {compileError ? <span className="server-error">{compileError}</span> : null}
       </header>
       <main className="panes">
@@ -200,7 +217,7 @@ function App() {
         </section>
       </main>
       <DiagnosticsPanel diagnostics={diagnostics} />
-      <StatusBar instructions={instructions} citeRange={citeRange} asmRange={asmRange} compileTimeMs={compileTimeMs} />
+      <StatusBar instructions={instructions} citeRange={citeRange} asmRange={asmRange} compileTimeMs={compileTimeMs} commandLine={commandLine} />
     </div>
   );
 }

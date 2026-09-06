@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { AsmInstruction, LineRange } from "../types";
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
   citeRange: LineRange | null;
   asmRange: LineRange | null;
   compileTimeMs: number | null;
+  commandLine: string | null;
 }
 
 /** Parses a cycles string like "12" or "17/10" (taken/not-taken), returning the taken (worst-case) value. */
@@ -15,7 +17,17 @@ function parseCycles(cycles: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function StatusBar({ instructions, citeRange, asmRange, compileTimeMs }: Props) {
+export function StatusBar({ instructions, citeRange, asmRange, compileTimeMs, commandLine }: Props) {
+  const [copied, setCopied] = useState(false);
+
+  const copyCommandLine = () => {
+    if (!commandLine) return;
+    navigator.clipboard.writeText(commandLine).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
   let scoped: AsmInstruction[];
   let scopeLabel: string;
 
@@ -50,13 +62,18 @@ export function StatusBar({ instructions, citeRange, asmRange, compileTimeMs }: 
 
   return (
     <footer className="status-bar">
-      <span>Compile time: {compileTimeMs !== null ? `${compileTimeMs} ms` : "—"}</span>
-      <span>
-        Bytes ({scopeLabel}): {scoped.length > 0 ? bytes : "—"}
+      <span>{compileTimeMs !== null ? `${compileTimeMs}ms` : "—"}</span>
+      <span
+        title={`${scopeLabel[0].toUpperCase() + scopeLabel.slice(1)}: ${scoped.length > 0 ? `${bytes} bytes and ${hasUnknownCycles ? "≥" : ""}${cycles} cycles` : "no bytes"}`}
+      >
+        {scopeLabel[0].toUpperCase() + scopeLabel.slice(1)}{" "}
+        {scoped.length > 0 ? `${bytes}B/${hasUnknownCycles ? "≥" : ""}${cycles}T` : "—"}
       </span>
-      <span>
-        Cycles ({scopeLabel}): {scoped.length > 0 ? `${hasUnknownCycles ? "≥" : ""}${cycles}` : "—"}
-      </span>
+      {commandLine ? (
+        <code className="command-line" onClick={copyCommandLine} title={copied ? "Copied!" : `${commandLine}\n(click to copy)`}>
+          {copied ? "Copied!" : commandLine}
+        </code>
+      ) : null}
     </footer>
   );
 }

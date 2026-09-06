@@ -39,16 +39,21 @@ export async function compileWithZ88dk(
   source: string,
   zccFlag: string,
   compilerId: string,
-  clibId?: string
+  clibId?: string,
+  optLevel?: string
 ): Promise<Omit<CompileResponse, "compileTimeMs">> {
   return withTempWorkspace("z88dkweb-", async (tmpDir) => {
     const sourcePath = path.join(tmpDir, SOURCE_FILE_NAME);
     await fs.writeFile(sourcePath, source, "utf8");
 
+    // sccz80's peephole optimiser level is `-O<n>`, sdcc's is `-SO<n>` - same 0-3 scale, different flag per front end.
+    const optFlag = optLevel ? (compilerId === "sdcc" ? `-SO${optLevel}` : `-O${optLevel}`) : undefined;
+
     const args = [
       zccFlag,
       `-compiler=${compilerId}`,
       ...(clibId ? [`-clib=${clibId}`] : []),
+      ...(optFlag ? [optFlag] : []),
       "--list",
       "--c-code-in-asm",
       "-m",
@@ -58,6 +63,8 @@ export async function compileWithZ88dk(
       "main",
       SOURCE_FILE_NAME,
     ];
+
+    const commandLine = ["zcc", ...args].join(" ");
 
     const { stdout, stderr } = await runZcc(args, tmpDir);
     const combinedOutput = `${stdout}\n${stderr}`.split(tmpDir).join("").split(sourcePath).join(SOURCE_FILE_NAME);
@@ -75,6 +82,7 @@ export async function compileWithZ88dk(
         diagnostics: diagnostics.length > 0 ? diagnostics : [{ severity: "error" as const, message: combinedOutput.trim() || "Compilation failed." }],
         instructions: [],
         sourceLines,
+        commandLine,
       };
     }
 
@@ -89,6 +97,7 @@ export async function compileWithZ88dk(
       diagnostics,
       instructions,
       sourceLines,
+      commandLine,
     };
   });
 }

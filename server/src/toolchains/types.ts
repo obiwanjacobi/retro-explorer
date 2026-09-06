@@ -58,6 +58,8 @@ export interface CompileResponse {
   sourceLines: SourceLine[];
   /** Wall-clock time the compile took, in milliseconds. */
   compileTimeMs: number;
+  /** The exact command line invoked (tool name + args), for display/copy in the client. */
+  commandLine: string;
 }
 
 /** Thrown for invalid user input (bad target, source too large, etc). Caught by the route and returned as HTTP 400. */

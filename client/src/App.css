@@ -53,6 +53,56 @@ body {
   cursor: default;
 }
 
+.compile-group {
+  display: flex;
+}
+
+/* A single split button: main "Compile" action + attached caret that opens a menu of options. */
+.split-button {
+  position: relative;
+  display: flex;
+}
+
+.split-button-main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  white-space: nowrap;
+}
+
+.split-button-toggle {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: 1px solid #555;
+  padding: 6px 8px;
+  font-size: 10px;
+}
+
+.split-button-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 4px;
+  min-width: 180px;
+  z-index: 10;
+}
+
+.split-button-menu li {
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.split-button-menu li:hover,
+.split-button-menu li[aria-selected="true"] {
+  background: #094771;
+}
+
 .server-error {
   color: #f14c4c;
   font-size: 13px;
@@ -168,10 +218,26 @@ body {
 
 .status-bar {
   display: flex;
-  gap: 24px;
+  align-items: center;
+  gap: 8px;
   padding: 4px 16px;
   background: #007acc;
   color: #fff;
   font-size: 12px;
   font-family: "Cascadia Code", Consolas, monospace;
+}
+
+.command-line {
+  flex: 1;
+  min-width: 0;
+  margin-left: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: all;
+}
+
+.command-line:hover {
+  text-decoration: underline;
 }

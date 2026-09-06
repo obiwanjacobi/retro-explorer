@@ -1,6 +1,16 @@
 import { useEffect } from "react";
 import { compileZ88dk } from "../../api";
+import { SplitCompileButton } from "../shared/SplitCompileButton";
 import type { PlatformOptions, PlatformProvider, PlatformToolbarProps } from "../types";
+
+// sccz80's peephole optimiser level is `-O<n>`, sdcc's is `-SO<n>` - same 0-3 scale, empty = zcc's own default (~O2).
+const OPT_LEVELS = [
+  { id: "", label: "Optimize: default" },
+  { id: "0", label: "Optimize: -O0 (none)" },
+  { id: "1", label: "Optimize: -O1" },
+  { id: "2", label: "Optimize: -O2" },
+  { id: "3", label: "Optimize: -O3 (max)" },
+];
 
 function Z88dkToolbarOptions({ target, toolchain, cpuId, options, onOptionsChange }: PlatformToolbarProps) {
   const compilers = toolchain.compilers ?? [];
@@ -53,8 +63,13 @@ function Z88dkToolbarOptions({ target, toolchain, cpuId, options, onOptionsChang
   );
 }
 
+function Z88dkCompileButton(props: PlatformToolbarProps & { onCompile: () => void; isCompiling: boolean }) {
+  return <SplitCompileButton {...props} levels={OPT_LEVELS} formatMainLabel={(lvl) => `O${lvl}`} />;
+}
+
 export const z88dkProvider: PlatformProvider = {
   id: "z88dk",
   ToolbarOptions: Z88dkToolbarOptions,
-  compile: (source, targetId, options) => compileZ88dk(source, targetId, options.compilerId, options.clibId),
+  CompileControl: Z88dkCompileButton,
+  compile: (source, targetId, options) => compileZ88dk(source, targetId, options.compilerId, options.clibId, options.optLevel),
 };
