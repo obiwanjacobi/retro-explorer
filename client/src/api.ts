@@ -1,4 +1,10 @@
-import type { CompileResponse, CompileTarget, Toolchain } from "./types";
+import type { CompileResponse, CompileTarget, Cpu, Toolchain } from "./types";
+
+export async function fetchCpus(): Promise<Cpu[]> {
+  const res = await fetch("/api/cpus");
+  if (!res.ok) throw new Error("Failed to load CPU list.");
+  return res.json();
+}
 
 export async function fetchToolchains(): Promise<Toolchain[]> {
   const res = await fetch("/api/toolchains");
@@ -12,20 +18,28 @@ export async function fetchTargets(): Promise<CompileTarget[]> {
   return res.json();
 }
 
-export async function compile(
+async function postCompile(endpoint: string, body: Record<string, unknown>): Promise<CompileResponse> {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const responseBody = await res.json();
+  if (!res.ok) {
+    throw new Error(responseBody.error ?? "Compile request failed.");
+  }
+  return responseBody as CompileResponse;
+}
+
+export function compileZ88dk(
   source: string,
   targetId: string,
   compilerId?: string,
   clibId?: string
 ): Promise<CompileResponse> {
-  const res = await fetch("/api/compile", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ source, targetId, compilerId, clibId }),
-  });
-  const body = await res.json();
-  if (!res.ok) {
-    throw new Error(body.error ?? "Compile request failed.");
-  }
-  return body as CompileResponse;
+  return postCompile("/api/z88dk/compile", { source, targetId, compilerId, clibId });
+}
+
+export function compileCc65(source: string, targetId: string): Promise<CompileResponse> {
+  return postCompile("/api/cc65/compile", { source, targetId });
 }

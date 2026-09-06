@@ -2,16 +2,23 @@ export interface CompileTarget {
   id: string;
   label: string;
   toolchainId: string;
+  cpuId: string;
   clibs?: CompilerOption[];
 }
 
 export interface Toolchain {
   id: string;
   label: string;
+  cpus: string[];
   compilers: CompilerOption[];
 }
 
 export interface CompilerOption {
+  id: string;
+  label: string;
+}
+
+export interface Cpu {
   id: string;
   label: string;
 }

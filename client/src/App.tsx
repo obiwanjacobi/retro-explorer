@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { compile, fetchTargets, fetchToolchains } from "./api";
+import { fetchCpus, fetchTargets, fetchToolchains } from "./api";
 import { AsmView } from "./components/AsmView";
 import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
 import { SourceEditor } from "./components/SourceEditor";
 import { StatusBar } from "./components/StatusBar";
-import type { AsmInstruction, CompileTarget, Diagnostic, LineRange, Toolchain } from "./types";
+import { platforms } from "./platforms/registry";
+import type { PlatformOptions } from "./platforms/types";
+import type { AsmInstruction, CompileTarget, Cpu, Diagnostic, LineRange, Toolchain } from "./types";
 import "./App.css";
 
 const DEFAULT_SOURCE = `int add(int a, int b) {
@@ -17,12 +19,13 @@ void main() {
 `;
 
 function App() {
+  const [cpus, setCpus] = useState<Cpu[]>([]);
+  const [cpuId, setCpuId] = useState("z80");
   const [toolchains, setToolchains] = useState<Toolchain[]>([]);
   const [toolchainId, setToolchainId] = useState("z88dk");
   const [targets, setTargets] = useState<CompileTarget[]>([]);
   const [targetId, setTargetId] = useState("z80");
-  const [compilerId, setCompilerId] = useState<string | undefined>(undefined);
-  const [clibId, setClibId] = useState("");
+  const [platformOptions, setPlatformOptions] = useState<PlatformOptions>({});
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [instructions, setInstructions] = useState<AsmInstruction[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
@@ -35,6 +38,12 @@ function App() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    fetchCpus()
+      .then((c) => {
+        setCpus(c);
+        if (c.length > 0 && !c.some((x) => x.id === cpuId)) setCpuId(c[0].id);
+      })
+      .catch(() => setCompileError("Could not reach the compile server."));
     fetchToolchains()
       .then((tc) => {
         setToolchains(tc);
@@ -50,40 +59,33 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const toolchainsForCpu = toolchains.filter((tc) => tc.cpus.includes(cpuId));
   const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId);
   const currentToolchain = toolchains.find((tc) => tc.id === toolchainId);
-  const compilers = currentToolchain?.compilers ?? [];
   const currentTarget = targets.find((t) => t.id === targetId);
-  const clibs = currentTarget?.clibs ?? [];
+  const provider = platforms[toolchainId];
+
+  useEffect(() => {
+    if (toolchainsForCpu.length > 0 && !toolchainsForCpu.some((tc) => tc.id === toolchainId)) {
+      setToolchainId(toolchainsForCpu[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cpuId, toolchains]);
 
   useEffect(() => {
     if (targetsForToolchain.length > 0 && !targetsForToolchain.some((t) => t.id === targetId)) {
       setTargetId(targetsForToolchain[0].id);
     }
-    if (compilers.length > 0 && !compilers.some((c) => c.id === compilerId)) {
-      setCompilerId(compilers[0].id);
-    } else if (compilers.length === 0) {
-      setCompilerId(undefined);
-    }
+    setPlatformOptions({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolchainId, targets, toolchains]);
+  }, [toolchainId, targets]);
 
-  useEffect(() => {
-    if (clibs.length === 0) {
-      if (clibId !== "") setClibId("");
-      return;
-    }
-    if (!clibs.some((c) => c.id === clibId)) {
-      setClibId(clibs.find((c) => c.id === "default")?.id ?? clibs[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetId, targets]);
-
-  const runCompile = async (src: string, target: string, compiler: string | undefined, clib: string) => {
+  const runCompile = async (src: string, target: string, options: PlatformOptions) => {
+    if (!provider) return;
     setIsCompiling(true);
     setCompileError(null);
     try {
-      const result = await compile(src, target, compiler, clib || undefined);
+      const result = await provider.compile(src, target, options);
       setInstructions(result.instructions);
       setDiagnostics(result.diagnostics);
       setCompileTimeMs(result.compileTimeMs);
@@ -100,13 +102,13 @@ function App() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      runCompile(source, targetId, compilerId, clibId);
+      runCompile(source, targetId, platformOptions);
     }, 700);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, targetId, compilerId, clibId]);
+  }, [source, targetId, platformOptions]);
 
   const handleCiteSelectionChange = (range: LineRange | null) => {
     setCiteRange(range);
@@ -122,8 +124,15 @@ function App() {
     <div className="app">
       <header className="toolbar">
         <h1>Retro Explorer</h1>
+        <select value={cpuId} onChange={(e) => setCpuId(e.target.value)}>
+          {cpus.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </select>
         <select value={toolchainId} onChange={(e) => setToolchainId(e.target.value)}>
-          {toolchains.map((tc) => (
+          {toolchainsForCpu.map((tc) => (
             <option key={tc.id} value={tc.id}>
               {tc.label}
             </option>
@@ -136,25 +145,15 @@ function App() {
             </option>
           ))}
         </select>
-        {compilers.length > 0 ? (
-          <select value={compilerId} onChange={(e) => setCompilerId(e.target.value)}>
-            {compilers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+        {provider?.ToolbarOptions && currentTarget && currentToolchain ? (
+          <provider.ToolbarOptions
+            target={currentTarget}
+            toolchain={currentToolchain}
+            options={platformOptions}
+            onOptionsChange={setPlatformOptions}
+          />
         ) : null}
-        {clibs.length > 0 ? (
-          <select value={clibId} onChange={(e) => setClibId(e.target.value)}>
-            {clibs.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        <button onClick={() => runCompile(source, targetId, compilerId, clibId)} disabled={isCompiling}>
+        <button onClick={() => runCompile(source, targetId, platformOptions)} disabled={isCompiling}>
           {isCompiling ? "Compiling…" : "Compile"}
         </button>
         {compileError ? <span className="server-error">{compileError}</span> : null}

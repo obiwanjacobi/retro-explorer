@@ -8,10 +8,12 @@ import { resolveZ88dkTarget, Z88DK_TARGETS } from "./targets.js";
 export const z88dkToolchain: Toolchain = {
   id: "z88dk",
   label: "z88dk",
+  cpus: ["z80"],
   targets: Z88DK_TARGETS.map(({ id, label }) => ({
     id,
     label,
     toolchainId: "z88dk",
+    cpuId: "z80",
     clibs: getZ88dkClibs(id),
   })),
   compilers: Z88DK_COMPILERS,

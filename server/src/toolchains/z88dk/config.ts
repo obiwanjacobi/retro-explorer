@@ -1,22 +1,10 @@
-import fs from "node:fs";
 import path from "node:path";
+import { resolveToolHome } from "../shared/resolveToolHome.js";
 
-function requireEnvPath(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable ${name}`);
-  }
-  return value;
-}
-
-const z88dkHome = requireEnvPath("Z88DK_HOME");
-const zccExe = path.join(z88dkHome, "bin", process.platform === "win32" ? "zcc.exe" : "zcc");
-
-if (!fs.existsSync(zccExe)) {
-  throw new Error(
-    `zcc executable not found at ${zccExe}. Check the Z88DK_HOME environment variable.`
-  );
-}
+const { home: z88dkHome, exePath: zccExe } = resolveToolHome("Z88DK_HOME", [
+  "bin",
+  process.platform === "win32" ? "zcc.exe" : "zcc",
+]);
 
 export const z88dkConfig = {
   z88dkHome,

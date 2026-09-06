@@ -1,25 +1,16 @@
 import { Router } from "express";
 import { z } from "zod";
-import { listTargets, listToolchains } from "../toolchains/registry.js";
+import { cc65Toolchain } from "../toolchains/cc65/index.js";
 import { runCompile } from "../toolchains/runCompile.js";
 import { CompileRequestError } from "../toolchains/types.js";
 
+// Typed, whitelisted request body for the cc65 platform specifically.
 const compileBodySchema = z.object({
   source: z.string().max(200_000),
   targetId: z.string().max(64),
-  compilerId: z.string().max(64).optional(),
-  clibId: z.string().max(64).optional(),
 });
 
 export const router = Router();
-
-router.get("/targets", (_req, res) => {
-  res.json(listTargets());
-});
-
-router.get("/toolchains", (_req, res) => {
-  res.json(listToolchains());
-});
 
 router.post("/compile", async (req, res) => {
   const parsed = compileBodySchema.safeParse(req.body);
@@ -27,12 +18,16 @@ router.post("/compile", async (req, res) => {
     res.status(400).json({ error: "Invalid request body.", details: parsed.error.issues });
     return;
   }
+  const { source, targetId } = parsed.data;
+
+  const target = cc65Toolchain.targets.find((t) => t.id === targetId);
+  if (!target) {
+    res.status(400).json({ error: `Unknown cc65 target "${targetId}".` });
+    return;
+  }
 
   try {
-    const result = await runCompile(parsed.data.source, parsed.data.targetId, {
-      compilerId: parsed.data.compilerId,
-      clibId: parsed.data.clibId,
-    });
+    const result = await runCompile(source, targetId, cc65Toolchain);
     res.json(result);
   } catch (err) {
     if (err instanceof CompileRequestError) {

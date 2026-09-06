@@ -5,6 +5,8 @@ export interface CompileTarget {
   label: string;
   /** Id of the toolchain this target belongs to, e.g. "z88dk". */
   toolchainId: string;
+  /** Id of the CPU this target runs on, e.g. "z80", "6502" (see `toolchains/cpus.ts`). */
+  cpuId: string;
   /** Selectable C library variants for this target, if any (e.g. z88dk's "new"/"ansi"/"noclib"). */
   clibs?: CompilerOption[];
 }
@@ -55,13 +57,15 @@ export interface CompileResponse {
 /** Thrown for invalid user input (bad target, source too large, etc). Caught by the route and returned as HTTP 400. */
 export class CompileRequestError extends Error {}
 
-/** Optional per-compile choices a toolchain may support, beyond the target itself. */
-export interface CompileOptions {
-  /** Which compiler backend to use, if the toolchain offers more than one (see `Toolchain.compilers`). */
-  compilerId?: string;
-  /** Which C library variant to use, if the target offers more than one (see `CompileTarget.clibs`). */
-  clibId?: string;
-}
+/**
+ * Per-compile choices a toolchain may support, beyond the target itself.
+ * Each toolchain has its own HTTP route with its own zod schema (e.g.
+ * `routes/z88dk.ts`, `routes/cc65.ts`) that validates and whitelists every
+ * field of the actual request body before it ever reaches this generic bag -
+ * this type is just the shape `Toolchain.compile()` receives internally, not
+ * a raw pass-through of client input.
+ */
+export type CompileOptions = Record<string, string | undefined>;
 
 /**
  * A pluggable C-to-Z80 compiler backend (z88dk, sdcc, ...). Each toolchain
@@ -74,6 +78,8 @@ export interface Toolchain {
   id: string;
   /** Human readable label for the UI. */
   label: string;
+  /** Ids of the CPUs this toolchain can target (see `toolchains/cpus.ts`); used to filter the platform picker by selected CPU. */
+  cpus: string[];
   /** Compile targets this toolchain exposes. Target ids must be globally unique. */
   targets: CompileTarget[];
   /** Selectable compiler backends within this toolchain, if it has more than one (e.g. z88dk's sccz80/sdcc). */
