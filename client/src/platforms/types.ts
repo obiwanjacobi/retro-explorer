@@ -7,6 +7,7 @@ export type PlatformOptions = Record<string, string>;
 export interface PlatformToolbarProps {
   target: CompileTarget;
   toolchain: Toolchain;
+  cpuId: string;
   options: PlatformOptions;
   onOptionsChange: (options: PlatformOptions) => void;
 }

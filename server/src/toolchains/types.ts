@@ -5,8 +5,12 @@ export interface CompileTarget {
   label: string;
   /** Id of the toolchain this target belongs to, e.g. "z88dk". */
   toolchainId: string;
-  /** Id of the CPU this target runs on, e.g. "z80", "6502" (see `toolchains/cpus.ts`). */
-  cpuId: string;
+  /**
+   * Ids of the CPUs this target can produce code for (see `toolchains/cpus.ts`). Usually just one,
+   * but some z88dk targets pin different CPUs per clib (e.g. z80.cfg's "8080"/"8085"/"kc160" clibs
+   * alongside its plain z80 ones), so this is the union of all of them.
+   */
+  cpus: string[];
   /** Selectable C library variants for this target, if any (e.g. z88dk's "new"/"ansi"/"noclib"). */
   clibs?: CompilerOption[];
 }
@@ -15,6 +19,8 @@ export interface CompileTarget {
 export interface CompilerOption {
   id: string;
   label: string;
+  /** CPU id this option is pinned to, if any - set on z88dk clibs whose CLIB row bakes in a specific `-m<cpu>` flag. */
+  cpuId?: string;
 }
 
 export interface Diagnostic {

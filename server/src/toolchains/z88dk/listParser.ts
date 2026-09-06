@@ -5,8 +5,10 @@ const INSTRUCTION_ROW = /^\s*\d+\s+([0-9a-fA-F]{4})\s+([0-9a-fA-F]+)\s+(.*)$/;
 const NUMBERED_ROW = /^\s*\d+\s+(.*)$/;
 const FILE_TRANSITION = /^(\S.*):\s*$/;
 const SYMBOL_ROW = /^(\S+)\s*=\s*\$([0-9a-fA-F]+)\s*;/;
-// SDCC prefixes its source echo comments with "file:line:", e.g. ";test.c:1: int add(...)" - sccz80 just echoes the raw line.
-const SDCC_SOURCE_ECHO = /^([^\s:]+):(\d+):\s?(.*)$/;
+// SDCC, and sccz80 since z88dk v2.5, prefix source echo comments with "file:line:" (sccz80 additionally
+// quotes the filename), e.g. ";test.c:1: int add(...)" or ';"test.c":1: int add(...)' - older sccz80
+// versions just echo the raw line with no prefix at all.
+const SOURCE_ECHO_WITH_LOCATION = /^"?([^"\s:]+)"?:(\d+):\s?(.*)$/;
 
 /**
  * Parses `<file>.c.sym` or `.map` output, mapping symbol name -> address.
@@ -140,9 +142,9 @@ export function parseCLis(
     const stripped = rawLine.replace(/^\s*\d*\s*/, "");
     if (stripped.startsWith(";")) {
       const content = stripped.slice(1);
-      const sdccEcho = SDCC_SOURCE_ECHO.exec(content);
-      if (sdccEcho && sdccEcho[1] === sourceFileName) {
-        currentSourceLine = Number(sdccEcho[2]);
+      const locatedEcho = SOURCE_ECHO_WITH_LOCATION.exec(content);
+      if (locatedEcho && locatedEcho[1] === sourceFileName) {
+        currentSourceLine = Number(locatedEcho[2]);
       } else {
         const echoed = content.trim();
         const candidate = nonBlank[sourcePointer];

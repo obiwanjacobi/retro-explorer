@@ -60,7 +60,7 @@ function App() {
   }, []);
 
   const toolchainsForCpu = toolchains.filter((tc) => tc.cpus.includes(cpuId));
-  const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId);
+  const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId && t.cpus.includes(cpuId));
   const currentToolchain = toolchains.find((tc) => tc.id === toolchainId);
   const currentTarget = targets.find((t) => t.id === targetId);
   const provider = platforms[toolchainId];
@@ -78,7 +78,7 @@ function App() {
     }
     setPlatformOptions({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolchainId, targets]);
+  }, [toolchainId, cpuId, targets]);
 
   const runCompile = async (src: string, target: string, options: PlatformOptions) => {
     if (!provider) return;
@@ -149,6 +149,7 @@ function App() {
           <provider.ToolbarOptions
             target={currentTarget}
             toolchain={currentToolchain}
+            cpuId={cpuId}
             options={platformOptions}
             onOptionsChange={setPlatformOptions}
           />

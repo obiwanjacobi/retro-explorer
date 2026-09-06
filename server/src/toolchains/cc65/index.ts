@@ -13,7 +13,7 @@ export const cc65Toolchain: Toolchain = {
     id,
     label,
     toolchainId: "cc65",
-    cpuId: "6502",
+    cpus: ["6502"],
   })),
   compile(source, targetId) {
     const target = resolveCc65Target(targetId);

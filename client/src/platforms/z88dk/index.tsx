@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { compileZ88dk } from "../../api";
 import type { PlatformOptions, PlatformProvider, PlatformToolbarProps } from "../types";
 
-function Z88dkToolbarOptions({ target, toolchain, options, onOptionsChange }: PlatformToolbarProps) {
+function Z88dkToolbarOptions({ target, toolchain, cpuId, options, onOptionsChange }: PlatformToolbarProps) {
   const compilers = toolchain.compilers ?? [];
-  const clibs = target.clibs ?? [];
+  // Clibs that pin a different CPU than the one currently selected aren't valid choices here.
+  const clibs = (target.clibs ?? []).filter((c) => !c.cpuId || c.cpuId === cpuId);
 
   const resolvedCompilerId = options.compilerId && compilers.some((c) => c.id === options.compilerId) ? options.compilerId : compilers[0]?.id;
   const resolvedClibId =
@@ -39,7 +40,7 @@ function Z88dkToolbarOptions({ target, toolchain, options, onOptionsChange }: Pl
           ))}
         </select>
       ) : null}
-      {clibs.length > 0 ? (
+      {clibs.length > 1 ? (
         <select value={resolvedClibId ?? ""} onChange={(e) => onOptionsChange({ ...options, clibId: e.target.value })}>
           {clibs.map((c) => (
             <option key={c.id} value={c.id}>
