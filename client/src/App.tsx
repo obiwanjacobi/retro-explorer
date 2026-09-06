@@ -27,7 +27,8 @@ function App() {
   const [instructions, setInstructions] = useState<AsmInstruction[]>([]);
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [activeLine, setActiveLine] = useState<number | null>(null);
-  const [selectionRange, setSelectionRange] = useState<LineRange | null>(null);
+  const [citeRange, setCiteRange] = useState<LineRange | null>(null);
+  const [asmRange, setAsmRange] = useState<LineRange | null>(null);
   const [compileTimeMs, setCompileTimeMs] = useState<number | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
@@ -103,9 +104,14 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, targetId, compilerId, clibId]);
 
-  const handleAsmClickLine = (line: number | null) => {
-    setActiveLine(line);
-    setSelectionRange(line !== null ? { start: line, end: line } : null);
+  const handleCiteSelectionChange = (range: LineRange | null) => {
+    setCiteRange(range);
+    setAsmRange(null);
+  };
+
+  const handleAsmSelectRange = (range: LineRange | null) => {
+    setAsmRange(range);
+    setCiteRange(null);
   };
 
   return (
@@ -158,21 +164,22 @@ function App() {
             diagnostics={diagnostics}
             activeLine={activeLine}
             onCursorLineChange={setActiveLine}
-            onSelectionChange={setSelectionRange}
+            onSelectionChange={handleCiteSelectionChange}
           />
         </section>
         <section className="pane asm-pane">
           <AsmView
             instructions={instructions}
             activeLine={activeLine}
-            selectionRange={selectionRange}
+            citeRange={citeRange}
+            asmRange={asmRange}
             onHoverLine={setActiveLine}
-            onClickLine={handleAsmClickLine}
+            onSelectRange={handleAsmSelectRange}
           />
         </section>
       </main>
       <DiagnosticsPanel diagnostics={diagnostics} />
-      <StatusBar instructions={instructions} selectionRange={selectionRange} compileTimeMs={compileTimeMs} />
+      <StatusBar instructions={instructions} citeRange={citeRange} asmRange={asmRange} compileTimeMs={compileTimeMs} />
     </div>
   );
 }
