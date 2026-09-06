@@ -59,17 +59,18 @@ Each z88dk target defines its own set of C library variants (e.g. `default`, `ne
 `noclib`) via `-clib=`. Rather than hardcoding these, `clibDiscovery.ts` reads the actual
 `<target>.cfg` file from the installed z88dk and lists whatever it finds, excluding the
 `sdcc_ix`/`sdcc_iy`/`clang_*` variants (those bake in a specific compiler backend, which is already
-controlled by the separate compiler dropdown). The UI's default option omits `-clib` entirely,
-letting the target use its own built-in default - some targets define a `default` clib that isn't
-actually buildable in a given z88dk build, so explicit selections can fail; that's surfaced as a
-normal compile diagnostic, not a crash.
+controlled by the separate compiler dropdown). The UI defaults to the target's own `default` clib
+(falling back to the first discovered variant if a target doesn't define one) - some targets define
+a `default` clib that isn't actually buildable in a given z88dk build, so explicit selections can
+fail; that's surfaced as a normal compile diagnostic, not a crash.
 
 ## Supported z88dk targets
 
-ZX Spectrum 48K, ZX Spectrum Next, Timex Sinclair 2068, CP/M, RC2014, MSX, Amstrad CPC, Game Boy,
-Sega Master System, ColecoVision, SAM Coupé, Agon Light, Sord M5, Cambridge Z88, NEC PC-88, TRS-80,
-Enterprise 128 - see `server/src/toolchains/z88dk/targets.ts` for the full whitelist. z88dk itself
-supports ~90 targets; this list is a curated, verified-working subset.
+A generic bare Z80 target (no specific machine), ZX Spectrum 48K, ZX Spectrum Next, Timex Sinclair
+2068, CP/M, RC2014, MSX, Amstrad CPC, Game Boy, Sega Master System, ColecoVision, SAM Coupé, Agon
+Light, Sord M5, Cambridge Z88, NEC PC-88, TRS-80, Enterprise 128 - see
+`server/src/toolchains/z88dk/targets.ts` for the full whitelist. z88dk itself supports ~90 targets;
+this list is a curated, verified-working subset.
 
 ## Prerequisites
 

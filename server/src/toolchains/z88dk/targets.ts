@@ -14,6 +14,7 @@ export interface Z88dkTarget {
  * with the flags used in compiler.ts.
  */
 export const Z88DK_TARGETS: Z88dkTarget[] = [
+  { id: "z80", label: "Generic Z80 (no machine)", zccFlag: "+z80" },
   { id: "zx", label: "ZX Spectrum 48K", zccFlag: "+zx" },
   { id: "zxn", label: "ZX Spectrum Next", zccFlag: "+zxn" },
   { id: "ts2068", label: "Timex Sinclair 2068", zccFlag: "+ts2068" },

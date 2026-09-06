@@ -20,7 +20,7 @@ function App() {
   const [toolchains, setToolchains] = useState<Toolchain[]>([]);
   const [toolchainId, setToolchainId] = useState("z88dk");
   const [targets, setTargets] = useState<CompileTarget[]>([]);
-  const [targetId, setTargetId] = useState("zx");
+  const [targetId, setTargetId] = useState("z80");
   const [compilerId, setCompilerId] = useState<string | undefined>(undefined);
   const [clibId, setClibId] = useState("");
   const [source, setSource] = useState(DEFAULT_SOURCE);
@@ -69,8 +69,12 @@ function App() {
   }, [toolchainId, targets, toolchains]);
 
   useEffect(() => {
-    if (clibId !== "" && !clibs.some((c) => c.id === clibId)) {
-      setClibId("");
+    if (clibs.length === 0) {
+      if (clibId !== "") setClibId("");
+      return;
+    }
+    if (!clibs.some((c) => c.id === clibId)) {
+      setClibId(clibs.find((c) => c.id === "default")?.id ?? clibs[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetId, targets]);
@@ -143,7 +147,6 @@ function App() {
         ) : null}
         {clibs.length > 0 ? (
           <select value={clibId} onChange={(e) => setClibId(e.target.value)}>
-            <option value="">C library: target default</option>
             {clibs.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
