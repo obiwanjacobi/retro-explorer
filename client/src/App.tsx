@@ -18,7 +18,7 @@ void main() {
 }
 `;
 
-const SOURCE_STORAGE_KEY = "z88dk-web:source";
+const SOURCE_STORAGE_KEY = "retro-explorer:source";
 
 function loadStoredSource(): string {
   try {

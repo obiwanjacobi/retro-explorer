@@ -25,5 +25,5 @@ const clientDist = path.join(path.dirname(fileURLToPath(import.meta.url)), "../.
 app.use(express.static(clientDist));
 
 app.listen(config.port, () => {
-  console.log(`z88dk-web server listening on http://localhost:${config.port}`);
+  console.log(`retro-explorer server listening on http://localhost:${config.port}`);
 });
