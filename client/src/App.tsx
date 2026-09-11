@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { fetchCpus, fetchTargets, fetchToolchains } from "./api";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { fetchTargets, fetchToolchains } from "./api";
 import { AsmView } from "./components/AsmView";
 import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
 import { SourceEditor } from "./components/SourceEditor";
@@ -29,7 +29,6 @@ function loadStoredSource(): string {
 }
 
 function App() {
-  const [cpus, setCpus] = useState<Cpu[]>([]);
   const [cpuId, setCpuId] = useState("z80");
   const [toolchains, setToolchains] = useState<Toolchain[]>([]);
   const [toolchainId, setToolchainId] = useState("z88dk");
@@ -49,12 +48,6 @@ function App() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    fetchCpus()
-      .then((c) => {
-        setCpus(c);
-        if (c.length > 0 && !c.some((x) => x.id === cpuId)) setCpuId(c[0].id);
-      })
-      .catch(() => setCompileError("Could not reach the compile server."));
     fetchToolchains()
       .then((tc) => {
         setToolchains(tc);
@@ -70,11 +63,29 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toolchainsForCpu = toolchains.filter((tc) => tc.cpus.includes(cpuId));
+  // Every toolchain publishes its own static CPU list; collect them all and de-dupe by id so a CPU
+  // supported by more than one toolchain (e.g. z80) only shows up once in the picker.
+  const cpus = useMemo(() => {
+    const byId = new Map<string, Cpu>();
+    for (const tc of toolchains) for (const c of tc.cpus) if (!byId.has(c.id)) byId.set(c.id, c);
+    return Array.from(byId.values());
+  }, [toolchains]);
+
+  useEffect(() => {
+    if (cpus.length > 0 && !cpus.some((c) => c.id === cpuId)) setCpuId(cpus[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cpus]);
+
+  const toolchainsForCpu = toolchains.filter((tc) => tc.cpus.some((c) => c.id === cpuId));
   const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId && t.cpus.includes(cpuId));
   const currentToolchain = toolchains.find((tc) => tc.id === toolchainId);
   const currentTarget = targets.find((t) => t.id === targetId);
   const provider = platforms[toolchainId];
+  // The toolchain can claim a CPU (e.g. z88dk lists the whole zcc CPU family) without any actual
+  // target/clib backing it on this install (e.g. r3k) - `targetId` then stays stuck on the last
+  // valid target instead of resetting, so guard against silently compiling/showing stale results.
+  // `targets` starts empty until the initial fetch resolves, so don't flag "unsupported" before then.
+  const hasTargetForCpu = targets.length === 0 || targetsForToolchain.length > 0;
 
   useEffect(() => {
     if (toolchainsForCpu.length > 0 && !toolchainsForCpu.some((tc) => tc.id === toolchainId)) {
@@ -87,9 +98,17 @@ function App() {
     if (targetsForToolchain.length > 0 && !targetsForToolchain.some((t) => t.id === targetId)) {
       setTargetId(targetsForToolchain[0].id);
     }
-    setPlatformOptions({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolchainId, cpuId, targets]);
+
+  // Only clear stale options when the toolchain itself changes (its option keys, e.g. z88dk's
+  // clibId, are meaningless to a different provider) - NOT on every cpuId/target change, which
+  // would race with ToolbarOptions' own effect that resolves a valid compilerId/clibId for the
+  // new CPU/target and lift it up, clobbering it back to `{}` right after.
+  useEffect(() => {
+    setPlatformOptions({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolchainId]);
 
   const runCompile = async (src: string, target: string, options: PlatformOptions) => {
     if (!provider) return;
@@ -113,6 +132,16 @@ function App() {
   };
 
   useEffect(() => {
+    if (!hasTargetForCpu) {
+      // Nothing can compile for this CPU on this toolchain - clear stale results instead of leaving
+      // the previous target's output on screen looking like it applies to the new CPU.
+      setInstructions([]);
+      setDiagnostics([]);
+      setCompileTimeMs(null);
+      setCommandLine(null);
+      setCompileError(null);
+      return;
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       runCompile(source, targetId, platformOptions);
@@ -121,7 +150,7 @@ function App() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, targetId, platformOptions]);
+  }, [source, targetId, platformOptions, hasTargetForCpu]);
 
   useEffect(() => {
     try {
@@ -166,7 +195,7 @@ function App() {
             </option>
           ))}
         </select>
-        {provider?.ToolbarOptions && currentTarget && currentToolchain ? (
+        {provider?.ToolbarOptions && currentTarget && currentToolchain && hasTargetForCpu ? (
           <provider.ToolbarOptions
             target={currentTarget}
             toolchain={currentToolchain}
@@ -176,7 +205,9 @@ function App() {
           />
         ) : null}
         <div className="compile-group">
-          {provider?.CompileControl && currentTarget && currentToolchain ? (
+          {!hasTargetForCpu ? (
+            <span className="server-error">No {currentToolchain?.label ?? toolchainId} target supports this CPU yet.</span>
+          ) : provider?.CompileControl && currentTarget && currentToolchain ? (
             <provider.CompileControl
               target={currentTarget}
               toolchain={currentToolchain}

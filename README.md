@@ -1,5 +1,7 @@
 # Retro Explorer
 
+> Created with Claude Sonnet 5. Started with an empty folder and I hardly touched the code. See the [Prompt History](./.github/prompts/) for more details.
+
 A Compiler Explorer / SharpLab style tool for retro C compilers. Write C code, compile it against a
 real toolchain for a chosen CPU and target machine, and see the generated assembly with linked
 addresses, instruction bytes, mnemonics, and cycle counts — with click-to-highlight mapping between

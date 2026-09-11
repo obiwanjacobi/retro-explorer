@@ -9,7 +9,7 @@ export interface CompileTarget {
 export interface Toolchain {
   id: string;
   label: string;
-  cpus: string[];
+  cpus: Cpu[];
   version: string;
   compilers: CompilerOption[];
 }
@@ -18,6 +18,8 @@ export interface CompilerOption {
   id: string;
   label: string;
   cpuId?: string;
+  /** CPU ids this option can NEVER be used with, if any (e.g. zsdcc has no 8080/8085 port). */
+  unsupportedCpus?: string[];
 }
 
 export interface Cpu {

@@ -40,7 +40,8 @@ export async function compileWithZ88dk(
   zccFlag: string,
   compilerId: string,
   clibId?: string,
-  optLevel?: string
+  optLevel?: string,
+  cpuFlag?: string
 ): Promise<Omit<CompileResponse, "compileTimeMs">> {
   return withTempWorkspace("z88dkweb-", async (tmpDir) => {
     const sourcePath = path.join(tmpDir, SOURCE_FILE_NAME);
@@ -54,6 +55,7 @@ export async function compileWithZ88dk(
       `-compiler=${compilerId}`,
       ...(clibId ? [`-clib=${clibId}`] : []),
       ...(optFlag ? [optFlag] : []),
+      ...(cpuFlag ? [cpuFlag] : []),
       "--list",
       "--c-code-in-asm",
       "-m",

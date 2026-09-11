@@ -1,4 +1,3 @@
-import { CPUS, type Cpu } from "./cpus.js";
 import type { CompilerOption, CompileTarget, Toolchain } from "./types.js";
 import { cc65Toolchain } from "./cc65/index.js";
 import { z88dkToolchain } from "./z88dk/index.js";
@@ -15,12 +14,6 @@ export function listTargets(): CompileTarget[] {
   return toolchains.flatMap((t) => t.targets);
 }
 
-export function listToolchains(): Array<{ id: string; label: string; cpus: string[]; version: string; compilers: CompilerOption[] }> {
+export function listToolchains(): Array<{ id: string; label: string; cpus: { id: string; label: string }[]; version: string; compilers: CompilerOption[] }> {
   return toolchains.map(({ id, label, cpus, version, compilers }) => ({ id, label, cpus, version, compilers: compilers ?? [] }));
-}
-
-/** CPUs actually supported by at least one registered toolchain, in the static display order from `cpus.ts`. */
-export function listCpus(): Cpu[] {
-  const supported = new Set(toolchains.flatMap((t) => t.cpus));
-  return CPUS.filter((c) => supported.has(c.id));
 }

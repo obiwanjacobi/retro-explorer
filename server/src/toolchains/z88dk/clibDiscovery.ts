@@ -5,7 +5,7 @@ import { z88dkConfig } from "./config.js";
 export interface Z88dkClib {
   id: string;
   label: string;
-  /** CPU id this clib targets (see `toolchains/cpus.ts`), resolved from zcc's `-m<cpu>` flags. */
+  /** CPU id this clib targets (see `./cpus.ts`), resolved from zcc's `-m<cpu>` flags. */
   cpuId: string;
 }
 
@@ -21,7 +21,7 @@ const CRT0_OVERRIDE = /-crt0=(\S+)/;
 const NO_CRT = /--no-crt\b/;
 
 // Matches zcc's `-m<cpu>` "CPU Targetting" flags (from `zcc --help`) that name an actual distinct
-// CPU (see `cpus.ts`). `-mz80_ixiy`/`-mz80_strict`/`-mz80n`/`-mgbz80` are deliberately excluded -
+// CPU (see `./cpus.ts`). `-mz80_ixiy`/`-mz80_strict`/`-mz80n`/`-mgbz80` are deliberately excluded -
 // they're still z80 silicon or a machine name, not a distinct CPU, so those fall back to plain "z80".
 const CPU_FLAG = /-m(8080|8085|z180|r2ka|r3k|r4k|r6k|ez80_z80|kc160)\b/;
 

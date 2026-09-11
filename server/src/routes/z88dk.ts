@@ -37,6 +37,14 @@ router.post("/compile", async (req, res) => {
     res.status(400).json({ error: `Unknown C library "${clibId}" for this target.` });
     return;
   }
+  // Reject compiler/CPU combos the compiler itself can't support (e.g. zsdcc has no 8080/8085 port) -
+  // driven by each compiler's own `unsupportedCpus` metadata, not hardcoded per-id here.
+  const clibCpuId = target.clibs?.find((c) => c.id === clibId)?.cpuId;
+  const compiler = z88dkToolchain.compilers?.find((c) => c.id === compilerId);
+  if (clibCpuId && compiler?.unsupportedCpus?.includes(clibCpuId)) {
+    res.status(400).json({ error: `${compiler.label} does not support the ${clibCpuId} CPU.` });
+    return;
+  }
 
   try {
     const result = await runCompile(source, targetId, z88dkToolchain, { compilerId, clibId, optLevel });

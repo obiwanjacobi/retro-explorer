@@ -1,3 +1,9 @@
+/** A CPU family exposed in the UI, published statically by whichever toolchain(s) support it. */
+export interface Cpu {
+  id: string;
+  label: string;
+}
+
 export interface CompileTarget {
   /** Unique id used in the API request, e.g. "zx". Must be unique across all toolchains. */
   id: string;
@@ -6,9 +12,9 @@ export interface CompileTarget {
   /** Id of the toolchain this target belongs to, e.g. "z88dk". */
   toolchainId: string;
   /**
-   * Ids of the CPUs this target can produce code for (see `toolchains/cpus.ts`). Usually just one,
-   * but some z88dk targets pin different CPUs per clib (e.g. z80.cfg's "8080"/"8085"/"kc160" clibs
-   * alongside its plain z80 ones), so this is the union of all of them.
+   * Ids of the CPUs this target can produce code for (see the owning toolchain's `cpus`). Usually
+   * just one, but some z88dk targets pin different CPUs per clib (e.g. z80.cfg's
+   * "8080"/"8085"/"kc160" clibs alongside its plain z80 ones), so this is the union of all of them.
    */
   cpus: string[];
   /** Selectable C library variants for this target, if any (e.g. z88dk's "new"/"ansi"/"noclib"). */
@@ -21,6 +27,8 @@ export interface CompilerOption {
   label: string;
   /** CPU id this option is pinned to, if any - set on z88dk clibs whose CLIB row bakes in a specific `-m<cpu>` flag. */
   cpuId?: string;
+  /** CPU ids this option can NEVER be used with, if any (e.g. zsdcc has no 8080/8085 port) - clients should hide/disable it for those CPUs, and the server rejects it regardless. */
+  unsupportedCpus?: string[];
 }
 
 export interface Diagnostic {
@@ -86,8 +94,8 @@ export interface Toolchain {
   id: string;
   /** Human readable label for the UI. */
   label: string;
-  /** Ids of the CPUs this toolchain can target (see `toolchains/cpus.ts`); used to filter the platform picker by selected CPU. */
-  cpus: string[];
+  /** The CPUs this toolchain can target, statically published by it; used to filter the platform picker by selected CPU. */
+  cpus: Cpu[];
   /** Version of the installed toolchain, detected from the compiler binary itself. Not yet part of `id` - today only one version of each toolchain can be registered at a time, but this is the field that would let multiple versions coexist as distinct registry entries in the future. */
   version: string;
   /** Compile targets this toolchain exposes. Target ids must be globally unique. */

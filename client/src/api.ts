@@ -1,10 +1,4 @@
-import type { CompileResponse, CompileTarget, Cpu, Toolchain } from "./types";
-
-export async function fetchCpus(): Promise<Cpu[]> {
-  const res = await fetch("/api/cpus");
-  if (!res.ok) throw new Error("Failed to load CPU list.");
-  return res.json();
-}
+import type { CompileResponse, CompileTarget, Toolchain } from "./types";
 
 export async function fetchToolchains(): Promise<Toolchain[]> {
   const res = await fetch("/api/toolchains");

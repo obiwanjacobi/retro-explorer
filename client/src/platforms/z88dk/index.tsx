@@ -13,7 +13,8 @@ const OPT_LEVELS = [
 ];
 
 function Z88dkToolbarOptions({ target, toolchain, cpuId, options, onOptionsChange }: PlatformToolbarProps) {
-  const compilers = toolchain.compilers ?? [];
+  // The server flags any compiler/CPU pair it can't support via `unsupportedCpus` (e.g. zsdcc has no 8080/8085 port).
+  const compilers = (toolchain.compilers ?? []).filter((c) => !c.unsupportedCpus?.includes(cpuId));
   // Clibs that pin a different CPU than the one currently selected aren't valid choices here.
   const clibs = (target.clibs ?? []).filter((c) => !c.cpuId || c.cpuId === cpuId);
 
