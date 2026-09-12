@@ -79,7 +79,9 @@ function App() {
   const toolchainsForCpu = toolchains.filter((tc) => tc.cpus.some((c) => c.id === cpuId));
   const targetsForToolchain = targets.filter((t) => t.toolchainId === toolchainId && t.cpus.includes(cpuId));
   const currentToolchain = toolchains.find((tc) => tc.id === toolchainId);
-  const currentTarget = targets.find((t) => t.id === targetId);
+  // Scope by toolchainId too - target ids aren't guaranteed unique across toolchains (e.g. z88dk's
+  // "c128" CP/M-on-Z80 target vs cc65's native "c128"), only within one.
+  const currentTarget = targets.find((t) => t.id === targetId && t.toolchainId === toolchainId);
   const provider = platforms[toolchainId];
   // The toolchain can claim a CPU (e.g. z88dk lists the whole zcc CPU family) without any actual
   // target/clib backing it on this install (e.g. r3k) - `targetId` then stays stuck on the last
