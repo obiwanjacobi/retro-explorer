@@ -11,7 +11,7 @@ import type { Cpu } from "../types.js";
 export const Z88DK_CPUS: Cpu[] = [
   { id: "z80", label: "Zilog Z80" },
   { id: "z180", label: "Zilog Z180" },
-  { id: "ez80_z80", label: "eZ80 (Z80 mode)" },
+  { id: "ez80_z80", label: "Zilog eZ80 (Z80 mode)" },
   { id: "kc160", label: "KC160" },
   { id: "8080", label: "Intel 8080" },
   { id: "8085", label: "Intel 8085" },

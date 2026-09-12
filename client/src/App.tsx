@@ -68,7 +68,7 @@ function App() {
   const cpus = useMemo(() => {
     const byId = new Map<string, Cpu>();
     for (const tc of toolchains) for (const c of tc.cpus) if (!byId.has(c.id)) byId.set(c.id, c);
-    return Array.from(byId.values());
+    return Array.from(byId.values()).sort((a, b) => a.label.localeCompare(b.label));
   }, [toolchains]);
 
   useEffect(() => {
